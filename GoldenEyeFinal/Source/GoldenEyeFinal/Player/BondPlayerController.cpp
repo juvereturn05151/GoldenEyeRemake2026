@@ -6,33 +6,8 @@
 #include "../Components/BondWeaponComponent.h"
 #include "../Weapons/BondWeaponBase.h"
 #include "Blueprint/UserWidget.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
-
-namespace
-{
-UUserWidget* FindExistingPlayerWidget(
-	UObject* WorldContextObject,
-	TSubclassOf<UUserWidget> WidgetClass
-)
-{
-	if (!WorldContextObject || !WidgetClass)
-	{
-		return nullptr;
-	}
-
-	TArray<UUserWidget*> ExistingWidgets;
-	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(
-		WorldContextObject,
-		ExistingWidgets,
-		WidgetClass,
-		true
-	);
-
-	return ExistingWidgets.IsEmpty() ? nullptr : ExistingWidgets[0];
-}
-}
 
 ABondPlayerController::ABondPlayerController()
 {
@@ -43,6 +18,12 @@ void ABondPlayerController::BeginPlay()
 	Super::BeginPlay();
 
 	CreatePlayerWidgets();
+
+	if (MainHUDWidget && TimeSlowHUDWidget)
+	{
+		OnPlayerWidgetsCreated();
+	}
+
 	BindPossessedBondDelegates();
 }
 
@@ -76,8 +57,7 @@ void ABondPlayerController::BindPossessedBondDelegates()
 		return;
 	}
 
-	UBondHealthComponent* HealthComponent =
-		PossessedBond->FindComponentByClass<UBondHealthComponent>();
+	UBondHealthComponent* HealthComponent = PossessedBond->FindComponentByClass<UBondHealthComponent>();
 
 	if (HealthComponent)
 	{
@@ -122,8 +102,7 @@ void ABondPlayerController::BindPossessedBondDelegates()
 		);
 	}
 
-	UBondTimeSlowComponent* TimeSlowComponent =
-		PossessedBond->FindComponentByClass<UBondTimeSlowComponent>();
+	UBondTimeSlowComponent* TimeSlowComponent = PossessedBond->FindComponentByClass<UBondTimeSlowComponent>();
 
 	if (TimeSlowComponent)
 	{
@@ -160,43 +139,21 @@ void ABondPlayerController::CreatePlayerWidgets()
 
 	if (!MainHUDWidget && MainHUDWidgetClass)
 	{
-		MainHUDWidget = FindExistingPlayerWidget(this, MainHUDWidgetClass);
-
-		if (!MainHUDWidget)
-		{
-			MainHUDWidget = CreateWidget<UUserWidget>(
-				this,
-				MainHUDWidgetClass
-			);
-		}
+		MainHUDWidget = CreateWidget<UUserWidget>(this,MainHUDWidgetClass);
 
 		if (MainHUDWidget)
 		{
-			if (!MainHUDWidget->IsInViewport())
-			{
-				MainHUDWidget->AddToViewport();
-			}
+			MainHUDWidget->AddToViewport();
 		}
 	}
 
 	if (!TimeSlowHUDWidget && TimeSlowHUDWidgetClass)
 	{
-		TimeSlowHUDWidget = FindExistingPlayerWidget(this, TimeSlowHUDWidgetClass);
-
-		if (!TimeSlowHUDWidget)
-		{
-			TimeSlowHUDWidget = CreateWidget<UUserWidget>(
-				this,
-				TimeSlowHUDWidgetClass
-			);
-		}
+		TimeSlowHUDWidget = CreateWidget<UUserWidget>(this,TimeSlowHUDWidgetClass);
 
 		if (TimeSlowHUDWidget)
 		{
-			if (!TimeSlowHUDWidget->IsInViewport())
-			{
-				TimeSlowHUDWidget->AddToViewport();
-			}
+			TimeSlowHUDWidget->AddToViewport();
 		}
 	}
 }
@@ -208,16 +165,14 @@ void ABondPlayerController::BindWeaponDelegates()
 		return;
 	}
 
-	UBondWeaponComponent* WeaponComponent =
-		PossessedBond->FindComponentByClass<UBondWeaponComponent>();
+	UBondWeaponComponent* WeaponComponent = PossessedBond->FindComponentByClass<UBondWeaponComponent>();
 
 	if (!WeaponComponent)
 	{
 		return;
 	}
 
-	ABondWeaponBase* EquippedWeapon =
-		WeaponComponent->GetEquippedWeapon();
+	ABondWeaponBase* EquippedWeapon = WeaponComponent->GetEquippedWeapon();
 
 	if (!EquippedWeapon)
 	{
@@ -278,18 +233,12 @@ void ABondPlayerController::HandleDeath()
 	HandleBondDeath();
 }
 
-void ABondPlayerController::HandleAmmoChanged(
-	int32 MagazineAmmo,
-	int32 ReserveAmmo
-)
+void ABondPlayerController::HandleAmmoChanged(int32 MagazineAmmo,int32 ReserveAmmo)
 {
 	UpdateAmmo(MagazineAmmo, ReserveAmmo);
 }
 
-void ABondPlayerController::HandleTimeSlowMeterChanged(
-	float CurrentMeter,
-	float MaxMeter
-)
+void ABondPlayerController::HandleTimeSlowMeterChanged(float CurrentMeter,float MaxMeter)
 {
 	UpdateTimeSlowMeter(CurrentMeter, MaxMeter);
 }

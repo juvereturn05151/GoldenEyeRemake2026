@@ -31,11 +31,10 @@ public:
 	void BindPossessedBondDelegates();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Bond|UI")
-	void UpdateDamageState(
-		float CurrentHealth,
-		float MaxHealth,
-		float HealthPercent
-	);
+	void OnPlayerWidgetsCreated();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Bond|UI")
+	void UpdateDamageState(float CurrentHealth,float MaxHealth,float HealthPercent);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Bond|UI")
 	void PlayDamageFlash(float DamageAmount);
