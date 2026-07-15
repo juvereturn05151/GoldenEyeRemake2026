@@ -12,6 +12,12 @@ E-mail: juvereturn@gmail.com
 
 class ABondWeaponBase;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FBondWeaponEquippedSignature,
+	ABondWeaponBase*,
+	NewWeapon
+);
+
 UCLASS(ClassGroup = (Bond), meta = (BlueprintSpawnableComponent))
 class GOLDENEYEFINAL_API UBondWeaponComponent : public UActorComponent
 {
@@ -19,6 +25,9 @@ class GOLDENEYEFINAL_API UBondWeaponComponent : public UActorComponent
 
 public:
 	UBondWeaponComponent();
+
+	UPROPERTY(BlueprintAssignable, Category = "Bond|Weapon")
+	FBondWeaponEquippedSignature OnWeaponEquipped;
 
 	UFUNCTION(BlueprintCallable, Category = "Bond|Weapon")
 	void SpawnDefaultWeapon();

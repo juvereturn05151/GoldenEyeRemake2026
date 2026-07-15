@@ -36,6 +36,15 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Bond|Components")
 	USkeletalMeshComponent* GetFirstPersonArms() const;
 
+	UFUNCTION(BlueprintPure, Category = "Bond|Components")
+	UBondHealthComponent* GetHealthComponent() const;
+
+	UFUNCTION(BlueprintPure, Category = "Bond|Components")
+	UBondWeaponComponent* GetWeaponComponent() const;
+
+	UFUNCTION(BlueprintPure, Category = "Bond|Components")
+	UBondTimeSlowComponent* GetTimeSlowComponent() const;
+
 protected:
 	virtual void BeginPlay() override;
 

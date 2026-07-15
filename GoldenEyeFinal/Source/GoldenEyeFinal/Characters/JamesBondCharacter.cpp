@@ -298,3 +298,18 @@ USkeletalMeshComponent* AJamesBondCharacter::GetFirstPersonArms() const
 {
 	return FirstPersonArms;
 }
+
+UBondHealthComponent* AJamesBondCharacter::GetHealthComponent() const
+{
+	return HealthComponent;
+}
+
+UBondWeaponComponent* AJamesBondCharacter::GetWeaponComponent() const
+{
+	return WeaponComponent;
+}
+
+UBondTimeSlowComponent* AJamesBondCharacter::GetTimeSlowComponent() const
+{
+	return TimeSlowComponent;
+}

@@ -75,6 +75,10 @@ void UBondWeaponComponent::EquipWeapon(ABondWeaponBase* NewWeapon)
 	);
 
 	EquippedWeapon = NewWeapon;
+
+	OnWeaponEquipped.Broadcast(
+		EquippedWeapon
+	);
 }
 
 void UBondWeaponComponent::StartFire()
