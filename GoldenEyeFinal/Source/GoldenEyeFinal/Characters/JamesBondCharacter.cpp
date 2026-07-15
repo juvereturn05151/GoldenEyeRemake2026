@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "../Components/BondHealthComponent.h"
+#include "../Components/BondWeaponComponent.h"
 
 AJamesBondCharacter::AJamesBondCharacter()
 {
@@ -58,6 +59,8 @@ AJamesBondCharacter::AJamesBondCharacter()
 	BondAudioComponent->bAutoActivate = false;
 
 	HealthComponent =CreateDefaultSubobject<UBondHealthComponent>(TEXT("HealthComponent"));
+
+	WeaponComponent =CreateDefaultSubobject<UBondWeaponComponent>(TEXT("WeaponComponent"));
 }
 
 void AJamesBondCharacter::BeginPlay()

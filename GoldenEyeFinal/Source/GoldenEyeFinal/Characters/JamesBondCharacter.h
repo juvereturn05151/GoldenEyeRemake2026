@@ -13,6 +13,7 @@ E-mail: juvereturn@gmail.com
 
 class UAudioComponent;
 class UBondHealthComponent;
+class UBondWeaponComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputComponent;
@@ -54,6 +55,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UBondHealthComponent> HealthComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UBondWeaponComponent> WeaponComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
