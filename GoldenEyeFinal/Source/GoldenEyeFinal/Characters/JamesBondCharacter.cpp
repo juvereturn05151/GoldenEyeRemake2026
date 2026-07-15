@@ -11,6 +11,7 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "../Components/BondHealthComponent.h"
 
 AJamesBondCharacter::AJamesBondCharacter()
 {
@@ -25,62 +26,38 @@ AJamesBondCharacter::AJamesBondCharacter()
 	// ACharacter provides CharacterMesh0, but Bond is first-person arms only.
 	GetMesh()->SetHiddenInGame(true);
 	GetMesh()->SetVisibility(false);
-	GetMesh()->SetCollisionEnabled(
-		ECollisionEnabled::NoCollision
-	);
+	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	FirstPersonCamera =
-		CreateDefaultSubobject<UCameraComponent>(
-			TEXT("FirstPersonCamera")
-		);
+	FirstPersonCamera =CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 
-	FirstPersonCamera->SetupAttachment(
-		GetCapsuleComponent()
-	);
+	FirstPersonCamera->SetupAttachment(GetCapsuleComponent());
 
-	FirstPersonCamera->SetRelativeLocation(
-		FVector(-10.0f, 0.0f, 64.0f)
-	);
+	FirstPersonCamera->SetRelativeLocation(FVector(-10.0f, 0.0f, 64.0f));
 
 	FirstPersonCamera->bUsePawnControlRotation = true;
 
-	FirstPersonArms =
-		CreateDefaultSubobject<USkeletalMeshComponent>(
-			TEXT("FirstPersonArms")
-		);
+	FirstPersonArms =CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FirstPersonArms"));
 
-	FirstPersonArms->SetupAttachment(
-		FirstPersonCamera
-	);
+	FirstPersonArms->SetupAttachment(FirstPersonCamera);
 
 	FirstPersonArms->SetOnlyOwnerSee(true);
 
-	FirstPersonArms->SetCollisionEnabled(
-		ECollisionEnabled::NoCollision
-	);
+	FirstPersonArms->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	FirstPersonArms->SetGenerateOverlapEvents(false);
 	FirstPersonArms->SetCastShadow(false);
 
-	WeaponRoot =
-		CreateDefaultSubobject<USceneComponent>(
-			TEXT("WeaponRoot")
-		);
+	WeaponRoot = CreateDefaultSubobject<USceneComponent>(TEXT("WeaponRoot"));
 
-	WeaponRoot->SetupAttachment(
-		FirstPersonArms
-	);
+	WeaponRoot->SetupAttachment(FirstPersonArms);
 
-	BondAudioComponent =
-		CreateDefaultSubobject<UAudioComponent>(
-			TEXT("BondAudioComponent")
-		);
+	BondAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("BondAudioComponent"));
 
-	BondAudioComponent->SetupAttachment(
-		GetRootComponent()
-	);
+	BondAudioComponent->SetupAttachment(GetRootComponent());
 
 	BondAudioComponent->bAutoActivate = false;
+
+	HealthComponent =CreateDefaultSubobject<UBondHealthComponent>(TEXT("HealthComponent"));
 }
 
 void AJamesBondCharacter::BeginPlay()
@@ -90,23 +67,15 @@ void AJamesBondCharacter::BeginPlay()
 	InitializeInputMapping();
 }
 
-void AJamesBondCharacter::SetupPlayerInputComponent(
-	UInputComponent* PlayerInputComponent
-)
+void AJamesBondCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	UEnhancedInputComponent* EnhancedInput =
-		Cast<UEnhancedInputComponent>(PlayerInputComponent);
+	UEnhancedInputComponent* EnhancedInput =Cast<UEnhancedInputComponent>(PlayerInputComponent);
 
 	if (!EnhancedInput)
 	{
-		UE_LOG(
-			LogTemp,
-			Error,
-			TEXT("JamesBondCharacter requires Enhanced Input.")
-		);
-
+		UE_LOG(LogTemp,Error,TEXT("JamesBondCharacter requires Enhanced Input."));
 		return;
 	}
 
@@ -155,45 +124,30 @@ void AJamesBondCharacter::SetupPlayerInputComponent(
 	}
 }
 
-void AJamesBondCharacter::Move(
-	const FInputActionValue& Value
-)
+void AJamesBondCharacter::Move(const FInputActionValue& Value)
 {
 	if (!Controller)
 	{
 		return;
 	}
 
-	const FVector2D Input =
-		Value.Get<FVector2D>();
+	const FVector2D Input = Value.Get<FVector2D>();
 
-	const FRotator ControlRotation =
-		Controller->GetControlRotation();
+	const FRotator ControlRotation = Controller->GetControlRotation();
 
-	const FRotator YawRotation(
-		0.0f,
-		ControlRotation.Yaw,
-		0.0f
-	);
+	const FRotator YawRotation(0.0f, ControlRotation.Yaw, 0.0f);
 
-	const FVector Forward =
-		FRotationMatrix(YawRotation)
-		.GetUnitAxis(EAxis::X);
+	const FVector Forward = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 
-	const FVector Right =
-		FRotationMatrix(YawRotation)
-		.GetUnitAxis(EAxis::Y);
+	const FVector Right = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
 
 	AddMovementInput(Forward, Input.Y);
 	AddMovementInput(Right, Input.X);
 }
 
-void AJamesBondCharacter::Look(
-	const FInputActionValue& Value
-)
+void AJamesBondCharacter::Look(const FInputActionValue& Value)
 {
-	const FVector2D Input =
-		Value.Get<FVector2D>();
+	const FVector2D Input = Value.Get<FVector2D>();
 
 	AddControllerYawInput(Input.X);
 	AddControllerPitchInput(Input.Y);
@@ -216,36 +170,27 @@ void AJamesBondCharacter::InitializeInputMapping()
 		return;
 	}
 
-	APlayerController* PC =
-		Cast<APlayerController>(GetController());
+	APlayerController* PC = Cast<APlayerController>(GetController());
 
 	if (!PC || !PC->GetLocalPlayer())
 	{
 		return;
 	}
 
-	UEnhancedInputLocalPlayerSubsystem* Subsystem =
-		PC->GetLocalPlayer()->GetSubsystem<
-		UEnhancedInputLocalPlayerSubsystem
-		>();
+	UEnhancedInputLocalPlayerSubsystem* Subsystem =PC->GetLocalPlayer()->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>();
 
 	if (Subsystem && DefaultMappingContext)
 	{
-		Subsystem->AddMappingContext(
-			DefaultMappingContext,
-			0
-		);
+		Subsystem->AddMappingContext(DefaultMappingContext,0);
 	}
 }
 
-USceneComponent*
-AJamesBondCharacter::GetWeaponRoot() const
+USceneComponent* AJamesBondCharacter::GetWeaponRoot() const
 {
 	return WeaponRoot;
 }
 
-USkeletalMeshComponent*
-AJamesBondCharacter::GetFirstPersonArms() const
+USkeletalMeshComponent* AJamesBondCharacter::GetFirstPersonArms() const
 {
 	return FirstPersonArms;
 }

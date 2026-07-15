@@ -12,6 +12,7 @@ E-mail: juvereturn@gmail.com
 #include "JamesBondCharacter.generated.h"
 
 class UAudioComponent;
+class UBondHealthComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputComponent;
@@ -36,73 +37,34 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	virtual void SetupPlayerInputComponent(
-		UInputComponent* PlayerInputComponent
-	) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 private:
-	UPROPERTY(
-		VisibleAnywhere,
-		BlueprintReadOnly,
-		Category = "Bond|Components",
-		meta = (AllowPrivateAccess = "true")
-	)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UCameraComponent> FirstPersonCamera;
 
-	UPROPERTY(
-		VisibleAnywhere,
-		BlueprintReadOnly,
-		Category = "Bond|Components",
-		meta = (AllowPrivateAccess = "true")
-	)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USkeletalMeshComponent> FirstPersonArms;
 
-	UPROPERTY(
-		VisibleAnywhere,
-		BlueprintReadOnly,
-		Category = "Bond|Components",
-		meta = (AllowPrivateAccess = "true")
-	)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USceneComponent> WeaponRoot;
 
-	UPROPERTY(
-		VisibleAnywhere,
-		BlueprintReadOnly,
-		Category = "Bond|Components",
-		meta = (AllowPrivateAccess = "true")
-	)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAudioComponent> BondAudioComponent;
 
-	UPROPERTY(
-		EditDefaultsOnly,
-		BlueprintReadOnly,
-		Category = "Bond|Input",
-		meta = (AllowPrivateAccess = "true")
-	)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UBondHealthComponent> HealthComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
-	UPROPERTY(
-		EditDefaultsOnly,
-		BlueprintReadOnly,
-		Category = "Bond|Input",
-		meta = (AllowPrivateAccess = "true")
-	)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> MoveAction;
 
-	UPROPERTY(
-		EditDefaultsOnly,
-		BlueprintReadOnly,
-		Category = "Bond|Input",
-		meta = (AllowPrivateAccess = "true")
-	)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> LookAction;
 
-	UPROPERTY(
-		EditDefaultsOnly,
-		BlueprintReadOnly,
-		Category = "Bond|Input",
-		meta = (AllowPrivateAccess = "true")
-	)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> JumpAction;
 
 	void Move(const FInputActionValue& Value);
