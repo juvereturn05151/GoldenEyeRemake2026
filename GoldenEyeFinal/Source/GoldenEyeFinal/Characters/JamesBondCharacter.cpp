@@ -125,6 +125,40 @@ void AJamesBondCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			&AJamesBondCharacter::StopJump
 		);
 	}
+
+	if (FireAction)
+	{
+		EnhancedInput->BindAction(
+			FireAction,
+			ETriggerEvent::Started,
+			this,
+			&AJamesBondCharacter::HandleFireStarted
+		);
+
+		EnhancedInput->BindAction(
+			FireAction,
+			ETriggerEvent::Completed,
+			this,
+			&AJamesBondCharacter::HandleFireCompleted
+		);
+
+		EnhancedInput->BindAction(
+			FireAction,
+			ETriggerEvent::Canceled,
+			this,
+			&AJamesBondCharacter::HandleFireCompleted
+		);
+	}
+
+	if(ReloadAction)
+	{
+		EnhancedInput->BindAction(
+			ReloadAction,
+			ETriggerEvent::Started,
+			this,
+			&AJamesBondCharacter::HandleReload
+		);
+	}
 }
 
 void AJamesBondCharacter::Move(const FInputActionValue& Value)
@@ -164,6 +198,30 @@ void AJamesBondCharacter::StartJump()
 void AJamesBondCharacter::StopJump()
 {
 	StopJumping();
+}
+
+void AJamesBondCharacter::HandleFireStarted()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->StartFire();
+	}
+}
+
+void AJamesBondCharacter::HandleFireCompleted()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->StopFire();
+	}
+}
+
+void AJamesBondCharacter::HandleReload()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->Reload();
+	}
 }
 
 void AJamesBondCharacter::InitializeInputMapping()

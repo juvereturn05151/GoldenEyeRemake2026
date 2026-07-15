@@ -21,6 +21,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	ReserveAmmo
 );
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBondReloadSignature);
+
 UCLASS()
 class GOLDENEYEFINAL_API ABondWeaponBase : public AActor
 {
@@ -56,6 +58,12 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Bond|Weapon")
 	FBondAmmoChangedSignature OnAmmoChanged;
 
+	UPROPERTY(BlueprintAssignable, Category = "Bond|Weapon")
+	FBondReloadSignature OnReloadStarted;
+
+	UPROPERTY(BlueprintAssignable, Category = "Bond|Weapon")
+	FBondReloadSignature OnReloadFinished;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -87,10 +95,30 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
 	float FireInterval = 0.25f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Reload", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
+	float ReloadDuration = 1.5f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
+	float Damage = 25.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
+	float TraceRange = 10000.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon", meta = (AllowPrivateAccess = "true"))
+	TEnumAsByte<ECollisionChannel> TraceChannel = ECC_Visibility;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Debug", meta = (AllowPrivateAccess = "true"))
+	bool bDrawDebugTrace = false;
+
 	bool bIsFiring = false;
 	bool bIsReloading = false;
 	float LastFireTime = -BIG_NUMBER;
 
+	FTimerHandle FireTimer;
+	FTimerHandle ReloadTimer;
+
 	void FireOnce();
+	FVector GetTraceStart() const;
+	FVector GetTraceDirection() const;
 	void BroadcastAmmoChanged();
 };

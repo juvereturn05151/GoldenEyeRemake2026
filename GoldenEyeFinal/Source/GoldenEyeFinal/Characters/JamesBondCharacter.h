@@ -71,9 +71,18 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> JumpAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> FireAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> ReloadAction;
+
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void StartJump();
 	void StopJump();
+	void HandleFireStarted();
+	void HandleFireCompleted();
+	void HandleReload();
 	void InitializeInputMapping();
 };
