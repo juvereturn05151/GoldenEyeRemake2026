@@ -12,6 +12,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "../Components/BondHealthComponent.h"
+#include "../Components/BondTimeSlowComponent.h"
 #include "../Components/BondWeaponComponent.h"
 
 AJamesBondCharacter::AJamesBondCharacter()
@@ -61,6 +62,8 @@ AJamesBondCharacter::AJamesBondCharacter()
 	HealthComponent =CreateDefaultSubobject<UBondHealthComponent>(TEXT("HealthComponent"));
 
 	WeaponComponent =CreateDefaultSubobject<UBondWeaponComponent>(TEXT("WeaponComponent"));
+
+	TimeSlowComponent =CreateDefaultSubobject<UBondTimeSlowComponent>(TEXT("TimeSlowComponent"));
 }
 
 void AJamesBondCharacter::BeginPlay()
@@ -159,6 +162,30 @@ void AJamesBondCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			&AJamesBondCharacter::HandleReload
 		);
 	}
+
+	if (TimeSlowAction)
+	{
+		EnhancedInput->BindAction(
+			TimeSlowAction,
+			ETriggerEvent::Started,
+			this,
+			&AJamesBondCharacter::HandleTimeSlowStarted
+		);
+
+		EnhancedInput->BindAction(
+			TimeSlowAction,
+			ETriggerEvent::Completed,
+			this,
+			&AJamesBondCharacter::HandleTimeSlowCompleted
+		);
+
+		EnhancedInput->BindAction(
+			TimeSlowAction,
+			ETriggerEvent::Canceled,
+			this,
+			&AJamesBondCharacter::HandleTimeSlowCompleted
+		);
+	}
 }
 
 void AJamesBondCharacter::Move(const FInputActionValue& Value)
@@ -221,6 +248,22 @@ void AJamesBondCharacter::HandleReload()
 	if (WeaponComponent)
 	{
 		WeaponComponent->Reload();
+	}
+}
+
+void AJamesBondCharacter::HandleTimeSlowStarted()
+{
+	if (TimeSlowComponent)
+	{
+		TimeSlowComponent->StartTimeSlow();
+	}
+}
+
+void AJamesBondCharacter::HandleTimeSlowCompleted()
+{
+	if (TimeSlowComponent)
+	{
+		TimeSlowComponent->StopTimeSlow();
 	}
 }
 

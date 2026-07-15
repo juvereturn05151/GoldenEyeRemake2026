@@ -13,6 +13,7 @@ E-mail: juvereturn@gmail.com
 
 class UAudioComponent;
 class UBondHealthComponent;
+class UBondTimeSlowComponent;
 class UBondWeaponComponent;
 class UCameraComponent;
 class UInputAction;
@@ -59,6 +60,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UBondWeaponComponent> WeaponComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UBondTimeSlowComponent> TimeSlowComponent;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
@@ -77,6 +81,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> ReloadAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> TimeSlowAction;
+
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void StartJump();
@@ -84,5 +91,7 @@ private:
 	void HandleFireStarted();
 	void HandleFireCompleted();
 	void HandleReload();
+	void HandleTimeSlowStarted();
+	void HandleTimeSlowCompleted();
 	void InitializeInputMapping();
 };
