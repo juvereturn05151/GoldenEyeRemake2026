@@ -71,6 +71,7 @@ void AJamesBondCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	AttachWeaponRootToConfiguredSocket();
 	InitializeInputMapping();
 }
 
@@ -281,6 +282,37 @@ void AJamesBondCharacter::HandleTimeSlowCompleted()
 	{
 		TimeSlowComponent->StopTimeSlow();
 	}
+}
+
+void AJamesBondCharacter::AttachWeaponRootToConfiguredSocket()
+{
+	if (WeaponRootSocketName == NAME_None)
+	{
+		return;
+	}
+
+	if (!FirstPersonArms || !WeaponRoot)
+	{
+		return;
+	}
+
+	if (!FirstPersonArms->DoesSocketExist(WeaponRootSocketName))
+	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("%s could not attach WeaponRoot: socket '%s' does not exist on FirstPersonArms."),
+			*GetName(),
+			*WeaponRootSocketName.ToString()
+		);
+		return;
+	}
+
+	WeaponRoot->AttachToComponent(
+		FirstPersonArms,
+		FAttachmentTransformRules::KeepWorldTransform,
+		WeaponRootSocketName
+	);
 }
 
 void AJamesBondCharacter::InitializeInputMapping()

@@ -63,6 +63,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USceneComponent> WeaponRoot;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon", meta = (AllowPrivateAccess = "true"))
+	FName WeaponRootSocketName = NAME_None;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UAudioComponent> BondAudioComponent;
 
@@ -105,5 +108,6 @@ private:
 	void HandleReload();
 	void HandleTimeSlowStarted();
 	void HandleTimeSlowCompleted();
+	void AttachWeaponRootToConfiguredSocket();
 	void InitializeInputMapping();
 };
