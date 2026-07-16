@@ -14,6 +14,7 @@
 #include "../Components/BondHealthComponent.h"
 #include "../Components/BondTimeSlowComponent.h"
 #include "../Components/BondWeaponComponent.h"
+#include "../Weapons/BondWeaponBase.h"
 
 AJamesBondCharacter::AJamesBondCharacter()
 {
@@ -248,6 +249,21 @@ void AJamesBondCharacter::HandleReload()
 	if (WeaponComponent)
 	{
 		WeaponComponent->Reload();
+	}
+}
+
+void AJamesBondCharacter::CompleteReload()
+{
+	if (!WeaponComponent)
+	{
+		return;
+	}
+
+	ABondWeaponBase* EquippedWeapon = WeaponComponent->GetEquippedWeapon();
+
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->CompleteReload();
 	}
 }
 

@@ -1,5 +1,8 @@
 #include "BondWeaponBase.h"
 
+#include "../Characters/JamesBondCharacter.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimMontage.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "DrawDebugHelpers.h"
@@ -80,6 +83,7 @@ void ABondWeaponBase::StartReload()
 
 	bIsReloading = true;
 	OnReloadStarted.Broadcast();
+	PlayFirstPersonMontage(FirstPersonReloadMontage);
 
 	UWorld* World = GetWorld();
 
@@ -166,6 +170,7 @@ void ABondWeaponBase::FireOnce()
 	--MagazineAmmo;
 
 	BroadcastAmmoChanged();
+	PlayFirstPersonMontage(FirstPersonFireMontage);
 
 	const FVector TraceStart = GetTraceStart();
 	const FVector TraceDirection = GetTraceDirection();
@@ -231,6 +236,35 @@ void ABondWeaponBase::FireOnce()
 		MagazineAmmo,
 		ReserveAmmo
 	);
+}
+
+void ABondWeaponBase::PlayFirstPersonMontage(UAnimMontage* MontageToPlay) const
+{
+	if (!MontageToPlay)
+	{
+		return;
+	}
+
+	const AJamesBondCharacter* BondOwner = Cast<AJamesBondCharacter>(GetOwner());
+
+	if (!BondOwner)
+	{
+		return;
+	}
+
+	USkeletalMeshComponent* FirstPersonArms = BondOwner->GetFirstPersonArms();
+
+	if (!FirstPersonArms)
+	{
+		return;
+	}
+
+	UAnimInstance* AnimInstance = FirstPersonArms->GetAnimInstance();
+
+	if (AnimInstance)
+	{
+		AnimInstance->Montage_Play(MontageToPlay);
+	}
 }
 
 FVector ABondWeaponBase::GetTraceStart() const

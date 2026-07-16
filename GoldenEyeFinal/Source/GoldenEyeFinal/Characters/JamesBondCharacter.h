@@ -45,6 +45,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Bond|Components")
 	UBondTimeSlowComponent* GetTimeSlowComponent() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Bond|Weapon")
+	void CompleteReload();
+
 protected:
 	virtual void BeginPlay() override;
 

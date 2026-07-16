@@ -12,6 +12,7 @@ E-mail: juvereturn@gmail.com
 
 class USceneComponent;
 class USkeletalMeshComponent;
+class UAnimMontage;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FBondAmmoChangedSignature,
@@ -98,6 +99,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Reload", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
 	float ReloadDuration = 1.5f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Animation", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimMontage> FirstPersonFireMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Animation", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UAnimMontage> FirstPersonReloadMontage;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
 	float Damage = 25.0f;
 
@@ -118,6 +125,7 @@ private:
 	FTimerHandle ReloadTimer;
 
 	void FireOnce();
+	void PlayFirstPersonMontage(UAnimMontage* MontageToPlay) const;
 	FVector GetTraceStart() const;
 	FVector GetTraceDirection() const;
 	void BroadcastAmmoChanged();
