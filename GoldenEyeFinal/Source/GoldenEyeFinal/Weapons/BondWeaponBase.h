@@ -117,6 +117,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Debug", meta = (AllowPrivateAccess = "true"))
 	bool bDrawDebugTrace = false;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Effects", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UParticleSystem> ImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Effects", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USoundBase> ShootSound;
+
 	bool bIsFiring = false;
 	bool bIsReloading = false;
 	float LastFireTime = -BIG_NUMBER;

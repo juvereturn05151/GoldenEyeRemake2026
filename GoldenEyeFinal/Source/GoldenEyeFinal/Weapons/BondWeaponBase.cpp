@@ -226,6 +226,26 @@ void ABondWeaponBase::FireOnce()
 			this,
 			nullptr
 		);
+
+	}
+
+	if (ImpactEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(
+			World,
+			ImpactEffect,
+			Hit.ImpactPoint,
+			Hit.ImpactNormal.Rotation()
+		);
+	}
+
+	if (ShootSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			World,
+			ShootSound,
+			Hit.ImpactPoint
+		);
 	}
 
 	UE_LOG(
