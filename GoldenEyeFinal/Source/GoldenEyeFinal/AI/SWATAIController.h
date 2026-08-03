@@ -1,0 +1,101 @@
+/*
+Name: Ju-ve Chankasemporn
+E-mail: juvereturn@gmail.com
+@2026 MyLoyalFans Productions
+*/
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "AIController.h"
+#include "Perception/AIPerceptionTypes.h"
+#include "SWATAIController.generated.h"
+
+class UAIPerceptionComponent;
+class UAISenseConfig_Hearing;
+class UAISenseConfig_Sight;
+class UBehaviorTree;
+
+UCLASS()
+class GOLDENEYEFINAL_API ASWATAIController : public AAIController
+{
+	GENERATED_BODY()
+
+public:
+	ASWATAIController();
+
+	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
+	AActor* GetTargetActor() const;
+
+	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
+	FVector GetLastKnownLocation() const;
+
+	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
+	FVector GetLastHeardLocation() const;
+
+	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
+	bool HasLineOfSight() const;
+
+	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
+	bool ShouldInvestigate() const;
+
+protected:
+	virtual void OnPossess(APawn* InPawn) override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SWAT|AI")
+	TObjectPtr<UAIPerceptionComponent> AIPerceptionComponent;
+
+	UPROPERTY()
+	TObjectPtr<UAISenseConfig_Sight> SightConfig;
+
+	UPROPERTY()
+	TObjectPtr<UAISenseConfig_Hearing> HearingConfig;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI|Perception", meta = (ClampMin = "0.0"))
+	float SightRadius = 2000.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI|Perception", meta = (ClampMin = "0.0"))
+	float LoseSightRadius = 2500.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI|Perception", meta = (ClampMin = "0.0", ClampMax = "180.0"))
+	float PeripheralVisionHalfAngleDegrees = 75.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI|Perception", meta = (ClampMin = "0.0"))
+	float HearingRange = 1600.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI|Perception", meta = (ClampMin = "0.0"))
+	float SightMaxAge = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI|Perception", meta = (ClampMin = "0.0"))
+	float HearingMaxAge = 2.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI|Perception")
+	bool bDebugPerception = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI")
+	TObjectPtr<UBehaviorTree> BehaviorTreeAsset;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
+	TObjectPtr<AActor> TargetActor;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
+	FVector LastKnownLocation = FVector::ZeroVector;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
+	FVector LastHeardLocation = FVector::ZeroVector;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
+	bool bHasLineOfSight = false;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
+	bool bShouldInvestigate = false;
+
+private:
+	UFUNCTION()
+	void HandleTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
+
+	void ConfigurePerception();
+	void HandleSightStimulus(AActor* Actor, const FAIStimulus& Stimulus);
+	void HandleHearingStimulus(const FAIStimulus& Stimulus);
+	bool IsPlayerPawn(AActor* Actor) const;
+};
