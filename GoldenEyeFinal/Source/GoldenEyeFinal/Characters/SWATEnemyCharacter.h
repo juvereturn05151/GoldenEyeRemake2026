@@ -8,6 +8,7 @@ E-mail: juvereturn@gmail.com
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "SWATEnemyCharacter.generated.h"
 
 class UNPCHealthComponent;
@@ -22,6 +23,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "SWAT|Components")
 	UNPCHealthComponent* GetHealthComponent() const;
+
+	UFUNCTION(BlueprintPure, Category = "SWAT|State")
+	bool IsDead() const;
 
 	UFUNCTION(BlueprintCallable, Category = "SWAT|State")
 	void SetInCombat(bool bNewIsInCombat);
@@ -38,11 +42,26 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "SWAT|State")
+	void OnSWATDeath();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "SWAT|State")
+	void OnSWATHitReaction(float DamageAmount);
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SWAT|Components")
 	TObjectPtr<UNPCHealthComponent> HealthComponent;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|State", meta = (ClampMin = "0.0"))
+	float HitReactionCooldown = 0.35f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|State", meta = (ClampMin = "0.0"))
+	float HitReactionMovementLockDuration = 0.30f;
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|State")
 	bool bIsDead = false;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|State")
+	bool bIsHitReacting = false;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|State")
 	bool bIsInCombat = false;
@@ -60,6 +79,18 @@ private:
 	UFUNCTION()
 	void HandleDeath();
 
+	UFUNCTION()
+	void HandleDamageTaken(float DamageAmount);
+
 	void StopMovementOnDeath();
 	void StopCombatOnDeath();
+	void EnableHitReaction();
+	void LockMovementForHitReaction();
+	void RestoreMovementAfterHitReaction();
+
+	bool bIsHitReactionOnCooldown = false;
+	TEnumAsByte<EMovementMode> PreviousMovementMode = MOVE_Walking;
+	uint8 PreviousCustomMovementMode = 0;
+	FTimerHandle HitReactionCooldownTimer;
+	FTimerHandle HitReactionMovementLockTimer;
 };
