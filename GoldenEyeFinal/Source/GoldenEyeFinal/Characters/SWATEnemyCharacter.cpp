@@ -1,6 +1,7 @@
 #include "SWATEnemyCharacter.h"
 
 #include "../Components/NPCHealthComponent.h"
+#include "../Components/SWATWeaponComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "TimerManager.h"
@@ -10,6 +11,7 @@ ASWATEnemyCharacter::ASWATEnemyCharacter()
 	PrimaryActorTick.bCanEverTick = false;
 
 	HealthComponent = CreateDefaultSubobject<UNPCHealthComponent>(TEXT("HealthComponent"));
+	WeaponComponent = CreateDefaultSubobject<USWATWeaponComponent>(TEXT("WeaponComponent"));
 }
 
 void ASWATEnemyCharacter::BeginPlay()
@@ -33,6 +35,11 @@ void ASWATEnemyCharacter::BeginPlay()
 UNPCHealthComponent* ASWATEnemyCharacter::GetHealthComponent() const
 {
 	return HealthComponent;
+}
+
+USWATWeaponComponent* ASWATEnemyCharacter::GetWeaponComponent() const
+{
+	return WeaponComponent;
 }
 
 bool ASWATEnemyCharacter::IsDead() const
@@ -206,6 +213,11 @@ void ASWATEnemyCharacter::StopMovementOnDeath()
 
 void ASWATEnemyCharacter::StopCombatOnDeath()
 {
+	if (WeaponComponent)
+	{
+		WeaponComponent->StopWeapon();
+	}
+
 	bIsInCombat = false;
 	bIsReloading = false;
 	bHasLineOfSight = false;
