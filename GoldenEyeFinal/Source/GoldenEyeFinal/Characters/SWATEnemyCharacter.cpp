@@ -40,24 +40,66 @@ bool ASWATEnemyCharacter::IsDead() const
 	return bIsDead;
 }
 
+bool ASWATEnemyCharacter::IsHitReacting() const
+{
+	return bIsHitReacting;
+}
+
+bool ASWATEnemyCharacter::IsInCombat() const
+{
+	return bIsInCombat;
+}
+
 void ASWATEnemyCharacter::SetInCombat(bool bNewIsInCombat)
 {
-	bIsInCombat = !bIsDead && bNewIsInCombat;
+	const bool bNewValue = !bIsDead && bNewIsInCombat;
+
+	if (bIsInCombat == bNewValue)
+	{
+		return;
+	}
+
+	bIsInCombat = bNewValue;
+	BroadcastStateChanged();
 }
 
 void ASWATEnemyCharacter::SetReloading(bool bNewIsReloading)
 {
-	bIsReloading = !bIsDead && bNewIsReloading;
+	const bool bNewValue = !bIsDead && bNewIsReloading;
+
+	if (bIsReloading == bNewValue)
+	{
+		return;
+	}
+
+	bIsReloading = bNewValue;
+	BroadcastStateChanged();
 }
 
 void ASWATEnemyCharacter::SetHasLineOfSight(bool bNewHasLineOfSight)
 {
-	bHasLineOfSight = !bIsDead && bNewHasLineOfSight;
+	const bool bNewValue = !bIsDead && bNewHasLineOfSight;
+
+	if (bHasLineOfSight == bNewValue)
+	{
+		return;
+	}
+
+	bHasLineOfSight = bNewValue;
+	BroadcastStateChanged();
 }
 
 void ASWATEnemyCharacter::SetFiring(bool bNewIsFiring)
 {
-	bIsFiring = !bIsDead && bNewIsFiring;
+	const bool bNewValue = !bIsDead && bNewIsFiring;
+
+	if (bIsFiring == bNewValue)
+	{
+		return;
+	}
+
+	bIsFiring = bNewValue;
+	BroadcastStateChanged();
 }
 
 void ASWATEnemyCharacter::HandleDeath()
@@ -82,6 +124,7 @@ void ASWATEnemyCharacter::HandleDeath()
 
 	StopMovementOnDeath();
 	StopCombatOnDeath();
+	BroadcastStateChanged();
 	OnSWATDeath();
 }
 
@@ -177,6 +220,7 @@ void ASWATEnemyCharacter::EnableHitReaction()
 void ASWATEnemyCharacter::LockMovementForHitReaction()
 {
 	bIsHitReacting = true;
+	BroadcastStateChanged();
 
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
 
@@ -204,6 +248,7 @@ void ASWATEnemyCharacter::RestoreMovementAfterHitReaction()
 	}
 
 	bIsHitReacting = false;
+	BroadcastStateChanged();
 
 	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
 
@@ -214,4 +259,9 @@ void ASWATEnemyCharacter::RestoreMovementAfterHitReaction()
 			PreviousCustomMovementMode
 		);
 	}
+}
+
+void ASWATEnemyCharacter::BroadcastStateChanged()
+{
+	OnSWATStateChanged.Broadcast();
 }

@@ -13,6 +13,7 @@ E-mail: juvereturn@gmail.com
 class USceneComponent;
 class USkeletalMeshComponent;
 class UAnimMontage;
+class APawn;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FBondAmmoChangedSignature,
@@ -23,6 +24,14 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 );
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FBondReloadSignature);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
+	FBondWeaponFiredSignature,
+	FVector,
+	ShotLocation,
+	APawn*,
+	InstigatorPawn
+);
 
 UCLASS()
 class GOLDENEYEFINAL_API ABondWeaponBase : public AActor
@@ -64,6 +73,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Bond|Weapon")
 	FBondReloadSignature OnReloadFinished;
+
+	UPROPERTY(BlueprintAssignable, Category = "Bond|Weapon")
+	FBondWeaponFiredSignature OnWeaponFired;
 
 protected:
 	virtual void BeginPlay() override;

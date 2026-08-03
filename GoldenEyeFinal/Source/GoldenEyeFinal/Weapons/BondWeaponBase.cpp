@@ -173,6 +173,13 @@ void ABondWeaponBase::FireOnce()
 	PlayFirstPersonMontage(FirstPersonFireMontage);
 
 	const FVector TraceStart = GetTraceStart();
+	APawn* OwnerPawn = Cast<APawn>(GetOwner());
+
+	OnWeaponFired.Broadcast(
+		TraceStart,
+		OwnerPawn
+	);
+
 	const FVector TraceDirection = GetTraceDirection();
 	const FVector TraceEnd = TraceStart + (TraceDirection * TraceRange);
 
@@ -210,7 +217,6 @@ void ABondWeaponBase::FireOnce()
 	if (bHit && Hit.GetActor())
 	{
 		AController* InstigatorController = nullptr;
-		APawn* OwnerPawn = Cast<APawn>(GetOwner());
 
 		if (OwnerPawn)
 		{

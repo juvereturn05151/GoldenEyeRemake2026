@@ -13,6 +13,8 @@ E-mail: juvereturn@gmail.com
 
 class UNPCHealthComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSWATStateChangedSignature);
+
 UCLASS()
 class GOLDENEYEFINAL_API ASWATEnemyCharacter : public ACharacter
 {
@@ -26,6 +28,15 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "SWAT|State")
 	bool IsDead() const;
+
+	UFUNCTION(BlueprintPure, Category = "SWAT|State")
+	bool IsHitReacting() const;
+
+	UFUNCTION(BlueprintPure, Category = "SWAT|State")
+	bool IsInCombat() const;
+
+	UPROPERTY(BlueprintAssignable, Category = "SWAT|State")
+	FSWATStateChangedSignature OnSWATStateChanged;
 
 	UFUNCTION(BlueprintCallable, Category = "SWAT|State")
 	void SetInCombat(bool bNewIsInCombat);
@@ -87,6 +98,7 @@ private:
 	void EnableHitReaction();
 	void LockMovementForHitReaction();
 	void RestoreMovementAfterHitReaction();
+	void BroadcastStateChanged();
 
 	bool bIsHitReactionOnCooldown = false;
 	TEnumAsByte<EMovementMode> PreviousMovementMode = MOVE_Walking;
