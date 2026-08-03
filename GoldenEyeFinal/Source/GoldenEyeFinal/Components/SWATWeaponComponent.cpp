@@ -18,6 +18,17 @@ void USWATWeaponComponent::BeginPlay()
 	CurrentMagazineAmmo = FMath::Max(0, MagazineCapacity);
 	CurrentReserveAmmo = FMath::Max(0, StartingReserveAmmo);
 
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[SWAT Weapon Init] ProjectileClass=%s WeaponMesh=%s MuzzleSocketName=%s CurrentMagazineAmmo=%d CurrentReserveAmmo=%d"),
+		*GetNameSafe(ProjectileClass),
+		*GetNameSafe(WeaponMesh),
+		*MuzzleSocketName.ToString(),
+		CurrentMagazineAmmo,
+		CurrentReserveAmmo
+	);
+
 	if (ASWATEnemyCharacter* SWATOwner = Cast<ASWATEnemyCharacter>(GetOwner()))
 	{
 		SWATOwner->OnSWATStateChanged.AddDynamic(
@@ -53,16 +64,71 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 {
 	AActor* OwnerActor = GetOwner();
 
-	if (
-		!OwnerActor ||
-		!Target ||
-		!ProjectileClass ||
-		!WeaponMesh ||
-		MuzzleSocketName == NAME_None ||
-		!WeaponMesh->DoesSocketExist(MuzzleSocketName) ||
-		!CanFire()
-		)
+	if (!OwnerActor)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Owner invalid"));
+		return false;
+	}
+
+	if (!Target)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Target invalid"));
+		return false;
+	}
+
+	if (!ProjectileClass)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] ProjectileClass not assigned"));
+		return false;
+	}
+
+	if (!WeaponMesh)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Weapon mesh not assigned"));
+		return false;
+	}
+
+	if (MuzzleSocketName == NAME_None || !WeaponMesh->DoesSocketExist(MuzzleSocketName))
+	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("[SWAT Fire Failed] Muzzle socket missing: %s"),
+			*MuzzleSocketName.ToString()
+		);
+		return false;
+	}
+
+	const ASWATEnemyCharacter* SWATOwner =
+		Cast<ASWATEnemyCharacter>(OwnerActor);
+
+	if (!SWATOwner)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Owner invalid"));
+		return false;
+	}
+
+	if (SWATOwner->IsDead())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Owner is dead"));
+		return false;
+	}
+
+	if (SWATOwner->IsHitReacting())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Owner is hit reacting"));
+		return false;
+	}
+
+	if (bIsReloading)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Weapon is reloading"));
+		return false;
+	}
+
+	if (CurrentMagazineAmmo <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Magazine empty"));
 		return false;
 	}
 
@@ -70,6 +136,7 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 
 	if (!World)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] World invalid"));
 		return false;
 	}
 
@@ -81,6 +148,7 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 
 	if (AimVector.IsNearlyZero())
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Aim direction invalid"));
 		return false;
 	}
 
@@ -107,12 +175,23 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 
 	if (!SpawnedProjectile)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Projectile spawn returned null"));
 		return false;
 	}
 
 	--CurrentMagazineAmmo;
 	BroadcastAmmoChanged();
 	OnProjectileFired.Broadcast(SpawnedProjectile);
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[SWAT Fire Success] Projectile=%s MuzzleLocation=%s Target=%s MagazineAmmo=%d"),
+		*GetNameSafe(SpawnedProjectile),
+		*MuzzleLocation.ToCompactString(),
+		*GetNameSafe(Target),
+		CurrentMagazineAmmo
+	);
 
 	return true;
 }
