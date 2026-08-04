@@ -2,8 +2,14 @@
 
 #include "../Characters/SWATEnemyCharacter.h"
 #include "../Weapons/SWATProjectile.h"
+#include "Components/SceneComponent.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/SphereComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Components/PrimitiveComponent.h"
+#include "DrawDebugHelpers.h"
 #include "Engine/World.h"
+#include "GameFramework/ProjectileMovementComponent.h"
 #include "TimerManager.h"
 
 USWATWeaponComponent::USWATWeaponComponent()
@@ -20,11 +26,14 @@ void USWATWeaponComponent::BeginPlay()
 
 	UE_LOG(
 		LogTemp,
-		Log,
-		TEXT("[SWAT Weapon Init] ProjectileClass=%s WeaponMesh=%s MuzzleSocketName=%s CurrentMagazineAmmo=%d CurrentReserveAmmo=%d"),
+		Warning,
+		TEXT("[SWAT Weapon Init] ProjectileClass=%s WeaponMesh=%s MuzzleSocketName=%s HasMuzzle=%s CurrentMagazineAmmo=%d CurrentReserveAmmo=%d"),
 		*GetNameSafe(ProjectileClass),
 		*GetNameSafe(WeaponMesh),
 		*MuzzleSocketName.ToString(),
+		WeaponMesh && MuzzleSocketName != NAME_None && WeaponMesh->DoesSocketExist(MuzzleSocketName)
+			? TEXT("true")
+			: TEXT("false"),
 		CurrentMagazineAmmo,
 		CurrentReserveAmmo
 	);
@@ -57,39 +66,78 @@ void USWATWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void USWATWeaponComponent::SetWeaponMesh(USkeletalMeshComponent* InWeaponMesh)
 {
+	SetWeaponSceneComponent(InWeaponMesh);
+}
+
+void USWATWeaponComponent::SetWeaponSceneComponent(USceneComponent* InWeaponMesh)
+{
 	WeaponMesh = InWeaponMesh;
+}
+
+void USWATWeaponComponent::SetStaticWeaponMesh(UStaticMeshComponent* InWeaponMesh)
+{
+	SetWeaponSceneComponent(InWeaponMesh);
+}
+
+void USWATWeaponComponent::EnableDebugDrawForNextShot()
+{
+	bDrawDebugForNextShot = true;
 }
 
 bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 {
 	AActor* OwnerActor = GetOwner();
+	const bool bHasMuzzle =
+		WeaponMesh &&
+		MuzzleSocketName != NAME_None &&
+		WeaponMesh->DoesSocketExist(MuzzleSocketName);
+
+	UE_LOG(
+		LogTemp,
+		Warning,
+		TEXT("[SWAT Weapon] FireProjectileAt entered Owner=%s Target=%s ProjectileClass=%s WeaponMesh=%s MuzzleSocket=%s HasMuzzle=%s Ammo=%d Reloading=%s"),
+		*GetNameSafe(OwnerActor),
+		*GetNameSafe(Target),
+		*GetNameSafe(ProjectileClass),
+		*GetNameSafe(WeaponMesh),
+		*MuzzleSocketName.ToString(),
+		bHasMuzzle ? TEXT("true") : TEXT("false"),
+		CurrentMagazineAmmo,
+		bIsReloading ? TEXT("true") : TEXT("false")
+	);
 
 	if (!OwnerActor)
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Owner invalid"));
 		return false;
 	}
 
 	if (!Target)
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Target invalid"));
 		return false;
 	}
 
 	if (!ProjectileClass)
 	{
+		bDrawDebugForNextShot = false;
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Weapon] ProjectileClass is not assigned"));
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] ProjectileClass not assigned"));
 		return false;
 	}
 
 	if (!WeaponMesh)
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Weapon mesh not assigned"));
 		return false;
 	}
 
-	if (MuzzleSocketName == NAME_None || !WeaponMesh->DoesSocketExist(MuzzleSocketName))
+	if (!bHasMuzzle)
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(
 			LogTemp,
 			Warning,
@@ -104,30 +152,35 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 
 	if (!SWATOwner)
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Owner invalid"));
 		return false;
 	}
 
 	if (SWATOwner->IsDead())
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Owner is dead"));
 		return false;
 	}
 
 	if (SWATOwner->IsHitReacting())
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Owner is hit reacting"));
 		return false;
 	}
 
 	if (bIsReloading)
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Weapon is reloading"));
 		return false;
 	}
 
 	if (CurrentMagazineAmmo <= 0)
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Magazine empty"));
 		return false;
 	}
@@ -136,18 +189,21 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 
 	if (!World)
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] World invalid"));
 		return false;
 	}
 
-	const FVector MuzzleLocation =
-		WeaponMesh->GetSocketLocation(MuzzleSocketName);
+	const FTransform MuzzleTransform =
+		WeaponMesh->GetSocketTransform(MuzzleSocketName, RTS_World);
+	const FVector MuzzleLocation = MuzzleTransform.GetLocation();
 	const FVector TargetLocation =
 		Target->GetActorLocation() + FVector(0.0f, 0.0f, TargetAimHeightOffset);
 	const FVector AimVector = TargetLocation - MuzzleLocation;
 
 	if (AimVector.IsNearlyZero())
 	{
+		bDrawDebugForNextShot = false;
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Aim direction invalid"));
 		return false;
 	}
@@ -164,7 +220,7 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 	SpawnParameters.Owner = OwnerActor;
 	SpawnParameters.Instigator = Cast<APawn>(OwnerActor);
 	SpawnParameters.SpawnCollisionHandlingOverride =
-		ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	ASWATProjectile* SpawnedProjectile = World->SpawnActor<ASWATProjectile>(
 		ProjectileClass,
@@ -175,13 +231,65 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 
 	if (!SpawnedProjectile)
 	{
+		bDrawDebugForNextShot = false;
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Weapon] SpawnActor failed"));
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Projectile spawn returned null"));
 		return false;
 	}
 
+	if (USphereComponent* ProjectileCollision = SpawnedProjectile->FindComponentByClass<USphereComponent>())
+	{
+		ProjectileCollision->IgnoreActorWhenMoving(OwnerActor, true);
+
+		if (APawn* OwnerPawn = Cast<APawn>(OwnerActor))
+		{
+			ProjectileCollision->IgnoreActorWhenMoving(OwnerPawn, true);
+		}
+
+		if (UPrimitiveComponent* WeaponPrimitive = Cast<UPrimitiveComponent>(WeaponMesh))
+		{
+			ProjectileCollision->IgnoreComponentWhenMoving(WeaponPrimitive, true);
+		}
+	}
+
+	if (bDrawDebugForNextShot)
+	{
+		DrawDebugSphere(World, MuzzleLocation, 12.0f, 12, FColor::Red, false, 2.0f);
+		DrawDebugDirectionalArrow(
+			World,
+			MuzzleLocation,
+			MuzzleLocation + FireDirection * 140.0f,
+			24.0f,
+			FColor::Yellow,
+			false,
+			2.0f,
+			0,
+			2.0f
+		);
+	}
+	bDrawDebugForNextShot = false;
+
 	--CurrentMagazineAmmo;
 	BroadcastAmmoChanged();
 	OnProjectileFired.Broadcast(SpawnedProjectile);
+
+	const UProjectileMovementComponent* SpawnedMovement =
+		SpawnedProjectile->FindComponentByClass<UProjectileMovementComponent>();
+	const USphereComponent* SpawnedCollision =
+		SpawnedProjectile->FindComponentByClass<USphereComponent>();
+
+	UE_LOG(
+		LogTemp,
+		Warning,
+		TEXT("[SWAT Weapon] Projectile spawned: %s Speed=%.2f MaxSpeed=%.2f CollisionComponent=%s Hidden=%s LifeSpan=%.2f Direction=%s"),
+		*GetNameSafe(SpawnedProjectile),
+		SpawnedMovement ? SpawnedMovement->InitialSpeed : 0.0f,
+		SpawnedMovement ? SpawnedMovement->MaxSpeed : 0.0f,
+		*GetNameSafe(SpawnedCollision),
+		SpawnedProjectile->IsHidden() ? TEXT("true") : TEXT("false"),
+		SpawnedProjectile->GetLifeSpan(),
+		*FireDirection.ToCompactString()
+	);
 
 	UE_LOG(
 		LogTemp,

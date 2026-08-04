@@ -10,15 +10,34 @@
 ASWATEnemyCharacter::ASWATEnemyCharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
+	bUseControllerRotationYaw = true;
 
 	HealthComponent = CreateDefaultSubobject<UNPCHealthComponent>(TEXT("HealthComponent"));
 	WeaponComponent = CreateDefaultSubobject<USWATWeaponComponent>(TEXT("WeaponComponent"));
 	CombatComponent = CreateDefaultSubobject<USWATCombatComponent>(TEXT("CombatComponent"));
+
+	UCharacterMovementComponent* MovementComponent = GetCharacterMovement();
+
+	if (MovementComponent)
+	{
+		MovementComponent->bOrientRotationToMovement = false;
+		MovementComponent->bUseControllerDesiredRotation = false;
+		MovementComponent->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
+	}
 }
 
 void ASWATEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bUseControllerRotationYaw = true;
+
+	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+	{
+		MovementComponent->bOrientRotationToMovement = false;
+		MovementComponent->bUseControllerDesiredRotation = false;
+		MovementComponent->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
+	}
 
 	if (HealthComponent)
 	{
@@ -120,6 +139,31 @@ void ASWATEnemyCharacter::SetFiring(bool bNewIsFiring)
 
 	bIsFiring = bNewValue;
 	BroadcastStateChanged();
+}
+
+void ASWATEnemyCharacter::ConfirmFireProjectileFromAnimation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("[SWAT Character] ConfirmFireProjectileFromAnimation entered"));
+
+	if (bIsDead)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Character] Fire notify rejected: owner is dead"));
+		return;
+	}
+
+	if (bIsHitReacting)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Character] Fire notify rejected: owner is hit reacting"));
+		return;
+	}
+
+	if (!CombatComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[SWAT Character] Fire notify rejected: CombatComponent invalid"));
+		return;
+	}
+
+	CombatComponent->ConfirmFireProjectileFromAnimation();
 }
 
 void ASWATEnemyCharacter::HandleDeath()

@@ -18,33 +18,23 @@ UBTService_SWATUpdateCombatState::UBTService_SWATUpdateCombatState()
 	bNotifyBecomeRelevant = true;
 }
 
-void UBTService_SWATUpdateCombatState::OnBecomeRelevant(
-	UBehaviorTreeComponent& OwnerComp,
-	uint8* NodeMemory
-)
+void UBTService_SWATUpdateCombatState::OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp,uint8* NodeMemory)
 {
 	Super::OnBecomeRelevant(OwnerComp, NodeMemory);
 
 	UpdateCombatState(OwnerComp);
 }
 
-void UBTService_SWATUpdateCombatState::TickNode(
-	UBehaviorTreeComponent& OwnerComp,
-	uint8* NodeMemory,
-	float DeltaSeconds
-)
+void UBTService_SWATUpdateCombatState::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 
 	UpdateCombatState(OwnerComp);
 }
 
-void UBTService_SWATUpdateCombatState::UpdateCombatState(
-	UBehaviorTreeComponent& OwnerComp
-)
+void UBTService_SWATUpdateCombatState::UpdateCombatState(UBehaviorTreeComponent& OwnerComp)
 {
-	UBlackboardComponent* BlackboardComponent =
-		OwnerComp.GetBlackboardComponent();
+	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 
 	if (!BlackboardComponent)
 	{

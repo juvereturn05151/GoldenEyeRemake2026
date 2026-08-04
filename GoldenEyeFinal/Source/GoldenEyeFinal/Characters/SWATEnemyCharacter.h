@@ -58,6 +58,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SWAT|State")
 	void SetFiring(bool bNewIsFiring);
 
+	UFUNCTION(BlueprintCallable, Category = "SWAT|Combat")
+	void ConfirmFireProjectileFromAnimation();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "SWAT|Animation")
+	void OnSWATFireAnimationRequested();
+
 protected:
 	virtual void BeginPlay() override;
 

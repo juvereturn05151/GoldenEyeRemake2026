@@ -4,6 +4,7 @@
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "DrawDebugHelpers.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
 #include "Perception/AIPerceptionComponent.h"
@@ -33,7 +34,9 @@ namespace SWATBlackboardKeys
 
 ASWATAIController::ASWATAIController()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = true;
+	bSetControlRotationFromPawnOrientation = false;
 
 	AIPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("AIPerceptionComponent"));
 	SetPerceptionComponent(*AIPerceptionComponent);
@@ -48,6 +51,7 @@ void ASWATAIController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	SetActorTickEnabled(true);
 	ConfigurePerception();
 	BindControlledSWAT(InPawn);
 
@@ -227,6 +231,7 @@ void ASWATAIController::HandleSightStimulus(AActor* Actor, const FAIStimulus& St
 		SetIsSearching(false);
 		LastKnownLocation = Actor->GetActorLocation();
 		bHasValidLastKnownLocation = true;
+		SetFocus(TargetActor, EAIFocusPriority::Gameplay);
 
 		if (ControlledSWAT)
 		{
@@ -263,6 +268,7 @@ void ASWATAIController::HandleSightStimulus(AActor* Actor, const FAIStimulus& St
 	}
 
 	bHasLineOfSight = false;
+	ClearFocus(EAIFocusPriority::Gameplay);
 
 	if (ControlledSWAT)
 	{
@@ -628,6 +634,7 @@ void ASWATAIController::DrawPerceptionDebug()
 	DrawLastKnownLocationDebug();
 	DrawLastHeardLocationDebug();
 	DrawPerceptionStateText();
+	DrawCombatRotationDebug();
 #endif
 }
 
@@ -924,6 +931,98 @@ void ASWATAIController::DrawPerceptionStateText() const
 		FColor::White,
 		Lifetime,
 		false
+	);
+#endif
+}
+
+void ASWATAIController::DrawCombatRotationDebug() const
+{
+#if ENABLE_DRAW_DEBUG
+	UWorld* World = GetWorld();
+	const APawn* ControlledPawn = GetPawn();
+
+	if (!World || !ControlledPawn || !TargetActor || !bHasLineOfSight)
+	{
+		return;
+	}
+
+	FVector EyeLocation;
+	FRotator EyeRotation;
+	ControlledPawn->GetActorEyesViewPoint(EyeLocation, EyeRotation);
+
+	const FVector TargetLocation = TargetActor->GetActorLocation();
+	const FVector PawnLocation = ControlledPawn->GetActorLocation();
+	const FVector DesiredDirection = (TargetLocation - PawnLocation).GetSafeNormal2D();
+	const float DesiredYaw = DesiredDirection.IsNearlyZero()
+		? ControlledPawn->GetActorRotation().Yaw
+		: DesiredDirection.Rotation().Yaw;
+
+	const float PawnYaw = ControlledPawn->GetActorRotation().Yaw;
+	const float ControlYaw = GetControlRotation().Yaw;
+	const AActor* FocusActor = GetFocusActor();
+	const UCharacterMovementComponent* MovementComponent =
+		ControlledPawn->FindComponentByClass<UCharacterMovementComponent>();
+
+	const bool bUseControllerRotationYaw =
+		ControlledPawn->bUseControllerRotationYaw;
+	const bool bOrientRotationToMovement =
+		MovementComponent ? MovementComponent->bOrientRotationToMovement : false;
+	const bool bUseControllerDesiredRotation =
+		MovementComponent ? MovementComponent->bUseControllerDesiredRotation : false;
+
+	const float Lifetime =
+		FMath::Max(DebugDrawDuration, PerceptionDebugInterval + 0.01f);
+	const float LineLength = 300.0f;
+	const FVector PawnForwardEnd =
+		PawnLocation + (ControlledPawn->GetActorForwardVector() * LineLength);
+	const FVector ControlForwardEnd =
+		PawnLocation + (GetControlRotation().Vector() * LineLength);
+
+	DrawDebugLine(
+		World,
+		EyeLocation,
+		TargetLocation,
+		FColor::Green,
+		false,
+		Lifetime,
+		0,
+		DebugLineThickness
+	);
+
+	DrawDebugLine(
+		World,
+		PawnLocation,
+		PawnForwardEnd,
+		FColor::Blue,
+		false,
+		Lifetime,
+		0,
+		DebugLineThickness
+	);
+
+	DrawDebugLine(
+		World,
+		PawnLocation + FVector(0.0f, 0.0f, 20.0f),
+		ControlForwardEnd + FVector(0.0f, 0.0f, 20.0f),
+		FColor::Cyan,
+		false,
+		Lifetime,
+		0,
+		DebugLineThickness
+	);
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[SWAT Rotation] Pawn=%s Focus=%s PawnYaw=%.2f ControlYaw=%.2f DesiredYaw=%.2f UseControllerRotationYaw=%s OrientRotationToMovement=%s UseControllerDesiredRotation=%s"),
+		*GetNameSafe(ControlledPawn),
+		*GetNameSafe(FocusActor),
+		PawnYaw,
+		ControlYaw,
+		DesiredYaw,
+		bUseControllerRotationYaw ? TEXT("true") : TEXT("false"),
+		bOrientRotationToMovement ? TEXT("true") : TEXT("false"),
+		bUseControllerDesiredRotation ? TEXT("true") : TEXT("false")
 	);
 #endif
 }

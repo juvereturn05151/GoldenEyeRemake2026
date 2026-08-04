@@ -5,7 +5,9 @@
 #include "SWATWeaponComponent.generated.h"
 
 class ASWATProjectile;
+class USceneComponent;
 class USkeletalMeshComponent;
+class UStaticMeshComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FSWATAmmoChangedSignature,
@@ -35,7 +37,15 @@ public:
 	void SetWeaponMesh(USkeletalMeshComponent* InWeaponMesh);
 
 	UFUNCTION(BlueprintCallable, Category = "SWAT|Weapon")
+	void SetWeaponSceneComponent(USceneComponent* InWeaponMesh);
+
+	UFUNCTION(BlueprintCallable, Category = "SWAT|Weapon")
+	void SetStaticWeaponMesh(UStaticMeshComponent* InWeaponMesh);
+
+	UFUNCTION(BlueprintCallable, Category = "SWAT|Weapon")
 	bool FireProjectileAt(AActor* Target);
+
+	void EnableDebugDrawForNextShot();
 
 	UFUNCTION(BlueprintPure, Category = "SWAT|Weapon")
 	bool CanFire() const;
@@ -111,7 +121,7 @@ protected:
 	bool bIsReloading = false;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|Weapon")
-	TObjectPtr<USkeletalMeshComponent> WeaponMesh;
+	TObjectPtr<USceneComponent> WeaponMesh;
 
 private:
 	UFUNCTION()
@@ -122,4 +132,5 @@ private:
 	void SetReloadingState(bool bNewIsReloading);
 
 	FTimerHandle ReloadTimerHandle;
+	bool bDrawDebugForNextShot = false;
 };

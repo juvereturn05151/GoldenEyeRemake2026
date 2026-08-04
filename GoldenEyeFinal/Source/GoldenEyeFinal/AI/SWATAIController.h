@@ -160,6 +160,7 @@ private:
 	void DrawLastKnownLocationDebug() const;
 	void DrawLastHeardLocationDebug() const;
 	void DrawPerceptionStateText() const;
+	void DrawCombatRotationDebug() const;
 
 	FTimerHandle PerceptionDebugTimerHandle;
 	TObjectPtr<ASWATEnemyCharacter> ControlledSWAT;

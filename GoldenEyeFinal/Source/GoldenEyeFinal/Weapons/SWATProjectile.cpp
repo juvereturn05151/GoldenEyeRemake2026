@@ -49,6 +49,31 @@ void ASWATProjectile::BeginPlay()
 	SetLifeSpan(LifeSpanSeconds);
 	CustomTimeDilation = 1.0f;
 
+	if (ProjectileMovement)
+	{
+		ProjectileMovement->Velocity =
+			GetActorForwardVector() * ProjectileMovement->InitialSpeed;
+	}
+
+	const FString VelocityString = ProjectileMovement
+		? ProjectileMovement->Velocity.ToCompactString()
+		: FString(TEXT("None"));
+
+	UE_LOG(
+		LogTemp,
+		Warning,
+		TEXT("[SWAT Projectile Init] Projectile=%s Root=%s Movement=%s InitialSpeed=%.2f MaxSpeed=%.2f Collision=%s Hidden=%s LifeSpan=%.2f Velocity=%s"),
+		*GetNameSafe(this),
+		*GetNameSafe(GetRootComponent()),
+		*GetNameSafe(ProjectileMovement),
+		ProjectileMovement ? ProjectileMovement->InitialSpeed : 0.0f,
+		ProjectileMovement ? ProjectileMovement->MaxSpeed : 0.0f,
+		*GetNameSafe(CollisionComponent),
+		IsHidden() ? TEXT("true") : TEXT("false"),
+		GetLifeSpan(),
+		*VelocityString
+	);
+
 	if (bDebugProjectileLogs)
 	{
 		UE_LOG(

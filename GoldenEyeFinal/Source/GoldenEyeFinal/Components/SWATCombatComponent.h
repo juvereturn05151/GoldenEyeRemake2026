@@ -32,8 +32,16 @@ public:
 	UFUNCTION(BlueprintPure, Category = "SWAT|Combat")
 	bool IsBurstOnCooldown() const;
 
+	UFUNCTION(BlueprintPure, Category = "SWAT|Combat")
+	bool IsWaitingForFireNotify() const;
+
+	UFUNCTION(BlueprintPure, Category = "SWAT|Combat")
+	AActor* GetCurrentTarget() const;
+
 	UFUNCTION(BlueprintCallable, Category = "SWAT|Combat")
 	void SetHasLineOfSight(bool bNewHasLineOfSight);
+
+	void ConfirmFireProjectileFromAnimation();
 
 	UPROPERTY(BlueprintAssignable, Category = "SWAT|Combat")
 	FSWATBurstSignature OnBurstStarted;
@@ -63,6 +71,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|Combat", meta = (ClampMin = "0.0"))
 	float BurstCooldown = 0.8f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|Combat", meta = (ClampMin = "0.0"))
+	float FireNotifyTimeout = 1.0f;
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|Combat")
 	TObjectPtr<AActor> CurrentTarget;
 
@@ -78,6 +89,9 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|Combat")
 	bool bHasLineOfSight = false;
 
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|Combat")
+	bool bWaitingForFireNotify = false;
+
 private:
 	UFUNCTION()
 	void HandleOwnerStateChanged();
@@ -89,7 +103,10 @@ private:
 	void HandleWeaponReloadStarted();
 
 	void BeginBurstShots();
-	void FireNextBurstShot();
+	void RequestNextAnimatedShot();
+	bool AcceptFireProjectileNotify();
+	void CompleteAnimatedShot(bool bProjectileFired);
+	void HandleFireNotifyTimeout();
 	void FinishBurst(bool bStartCooldown);
 	void FinishBurstCooldown();
 	bool ValidateBurstContinuation() const;
@@ -100,6 +117,7 @@ private:
 	void UnbindOwnerAndWeapon();
 
 	FTimerHandle AimDelayTimerHandle;
-	FTimerHandle ShotIntervalTimerHandle;
+	FTimerHandle NextShotDelayTimerHandle;
 	FTimerHandle BurstCooldownTimerHandle;
+	FTimerHandle FireNotifyTimeoutTimerHandle;
 };
