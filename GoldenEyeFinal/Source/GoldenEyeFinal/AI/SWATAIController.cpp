@@ -25,6 +25,10 @@ namespace SWATBlackboardKeys
 	const FName IsInCombat(TEXT("IsInCombat"));
 	const FName HomeLocation(TEXT("HomeLocation"));
 	const FName IsSearching(TEXT("IsSearching"));
+	const FName DistanceToTarget(TEXT("DistanceToTarget"));
+	const FName IsTooFar(TEXT("IsTooFar"));
+	const FName IsTooClose(TEXT("IsTooClose"));
+	const FName IsInPreferredRange(TEXT("IsInPreferredRange"));
 }
 
 ASWATAIController::ASWATAIController()
@@ -227,6 +231,7 @@ void ASWATAIController::HandleSightStimulus(AActor* Actor, const FAIStimulus& St
 		if (ControlledSWAT)
 		{
 			ControlledSWAT->SetInCombat(true);
+			ControlledSWAT->SetHasLineOfSight(true);
 		}
 
 #if ENABLE_DRAW_DEBUG
@@ -258,6 +263,11 @@ void ASWATAIController::HandleSightStimulus(AActor* Actor, const FAIStimulus& St
 	}
 
 	bHasLineOfSight = false;
+
+	if (ControlledSWAT)
+	{
+		ControlledSWAT->SetHasLineOfSight(false);
+	}
 
 #if ENABLE_DRAW_DEBUG
 	if (bDebugPerception)
@@ -378,6 +388,7 @@ void ASWATAIController::UnbindControlledSWAT()
 void ASWATAIController::SyncBlackboard()
 {
 	SyncPerceptionBlackboard();
+	SyncCombatRangeBlackboard();
 	SyncSWATStateBlackboard();
 }
 
@@ -461,6 +472,90 @@ void ASWATAIController::SyncSWATStateBlackboard()
 	BlackboardComponent->SetValueAsBool(
 		SWATBlackboardKeys::IsInCombat,
 		bSWATIsInCombat
+	);
+}
+
+void ASWATAIController::SyncCombatRangeBlackboard()
+{
+	UBlackboardComponent* BlackboardComponent = GetBlackboardComponent();
+
+	if (!BlackboardComponent)
+	{
+		return;
+	}
+
+	const APawn* ControlledPawn = GetPawn();
+
+	if (!ControlledPawn || !TargetActor)
+	{
+		ClearCombatRangeBlackboard(BlackboardComponent);
+		return;
+	}
+
+	const float DistanceToTarget = FVector::Dist(
+		ControlledPawn->GetActorLocation(),
+		TargetActor->GetActorLocation()
+	);
+
+	bool bTooClose = false;
+	bool bPreferred = false;
+	bool bTooFar = false;
+
+	if (DistanceToTarget < TooCloseDistance)
+	{
+		bTooClose = true;
+	}
+	else if (DistanceToTarget <= PreferredMaximumDistance)
+	{
+		bPreferred = true;
+	}
+	else
+	{
+		bTooFar = true;
+	}
+
+	BlackboardComponent->SetValueAsFloat(
+		SWATBlackboardKeys::DistanceToTarget,
+		DistanceToTarget
+	);
+	BlackboardComponent->SetValueAsBool(
+		SWATBlackboardKeys::IsTooClose,
+		bTooClose
+	);
+	BlackboardComponent->SetValueAsBool(
+		SWATBlackboardKeys::IsInPreferredRange,
+		bPreferred
+	);
+	BlackboardComponent->SetValueAsBool(
+		SWATBlackboardKeys::IsTooFar,
+		bTooFar
+	);
+}
+
+void ASWATAIController::ClearCombatRangeBlackboard(
+	UBlackboardComponent* BlackboardComponent
+) const
+{
+	if (!BlackboardComponent)
+	{
+		return;
+	}
+
+	BlackboardComponent->SetValueAsFloat(
+		SWATBlackboardKeys::DistanceToTarget,
+		0.0f
+	);
+	BlackboardComponent->SetValueAsBool(
+		SWATBlackboardKeys::IsTooClose,
+		false
+	);
+	BlackboardComponent->SetValueAsBool(
+		SWATBlackboardKeys::IsInPreferredRange,
+		false
+	);
+	BlackboardComponent->SetValueAsBool(
+		SWATBlackboardKeys::IsTooFar,
+		false
 	);
 }
 

@@ -1,6 +1,7 @@
 #include "SWATEnemyCharacter.h"
 
 #include "../Components/NPCHealthComponent.h"
+#include "../Components/SWATCombatComponent.h"
 #include "../Components/SWATWeaponComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
@@ -12,6 +13,7 @@ ASWATEnemyCharacter::ASWATEnemyCharacter()
 
 	HealthComponent = CreateDefaultSubobject<UNPCHealthComponent>(TEXT("HealthComponent"));
 	WeaponComponent = CreateDefaultSubobject<USWATWeaponComponent>(TEXT("WeaponComponent"));
+	CombatComponent = CreateDefaultSubobject<USWATCombatComponent>(TEXT("CombatComponent"));
 }
 
 void ASWATEnemyCharacter::BeginPlay()
@@ -40,6 +42,11 @@ UNPCHealthComponent* ASWATEnemyCharacter::GetHealthComponent() const
 USWATWeaponComponent* ASWATEnemyCharacter::GetWeaponComponent() const
 {
 	return WeaponComponent;
+}
+
+USWATCombatComponent* ASWATEnemyCharacter::GetCombatComponent() const
+{
+	return CombatComponent;
 }
 
 bool ASWATEnemyCharacter::IsDead() const
@@ -93,6 +100,12 @@ void ASWATEnemyCharacter::SetHasLineOfSight(bool bNewHasLineOfSight)
 	}
 
 	bHasLineOfSight = bNewValue;
+
+	if (CombatComponent)
+	{
+		CombatComponent->SetHasLineOfSight(bHasLineOfSight);
+	}
+
 	BroadcastStateChanged();
 }
 
@@ -216,6 +229,11 @@ void ASWATEnemyCharacter::StopCombatOnDeath()
 	if (WeaponComponent)
 	{
 		WeaponComponent->StopWeapon();
+	}
+
+	if (CombatComponent)
+	{
+		CombatComponent->StopCombatBurst();
 	}
 
 	bIsInCombat = false;

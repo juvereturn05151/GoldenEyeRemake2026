@@ -129,6 +129,12 @@ protected:
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
 	bool bIsSearching = false;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI|Combat", meta = (ClampMin = "0.0", AllowPrivateAccess = "true"))
+	float TooCloseDistance = 400.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI|Combat", meta = (ClampMin = "0.0", AllowPrivateAccess = "true"))
+	float PreferredMaximumDistance = 1400.0f;
+
 private:
 	UFUNCTION()
 	void HandleTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
@@ -144,6 +150,8 @@ private:
 	void SyncBlackboard();
 	void SyncPerceptionBlackboard();
 	void SyncSWATStateBlackboard();
+	void SyncCombatRangeBlackboard();
+	void ClearCombatRangeBlackboard(UBlackboardComponent* BlackboardComponent) const;
 	bool IsPlayerPawn(AActor* Actor) const;
 	void StartPerceptionDebug();
 	void StopPerceptionDebug();

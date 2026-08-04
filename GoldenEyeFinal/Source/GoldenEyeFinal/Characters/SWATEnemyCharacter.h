@@ -12,6 +12,7 @@ E-mail: juvereturn@gmail.com
 #include "SWATEnemyCharacter.generated.h"
 
 class UNPCHealthComponent;
+class USWATCombatComponent;
 class USWATWeaponComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSWATStateChangedSignature);
@@ -29,6 +30,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "SWAT|Components")
 	USWATWeaponComponent* GetWeaponComponent() const;
+
+	UFUNCTION(BlueprintPure, Category = "SWAT|Components")
+	USWATCombatComponent* GetCombatComponent() const;
 
 	UFUNCTION(BlueprintPure, Category = "SWAT|State")
 	bool IsDead() const;
@@ -68,6 +72,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SWAT|Components")
 	TObjectPtr<USWATWeaponComponent> WeaponComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "SWAT|Components")
+	TObjectPtr<USWATCombatComponent> CombatComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|State", meta = (ClampMin = "0.0"))
 	float HitReactionCooldown = 0.35f;
