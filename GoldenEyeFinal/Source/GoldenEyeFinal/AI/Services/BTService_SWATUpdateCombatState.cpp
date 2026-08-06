@@ -115,9 +115,7 @@ void UBTService_SWATUpdateCombatState::UpdateCombatState(UBehaviorTreeComponent&
 	);
 }
 
-void UBTService_SWATUpdateCombatState::ClearRangeBlackboard(
-	UBlackboardComponent* BlackboardComponent
-) const
+void UBTService_SWATUpdateCombatState::ClearRangeBlackboard(UBlackboardComponent* BlackboardComponent) const
 {
 	if (!BlackboardComponent)
 	{

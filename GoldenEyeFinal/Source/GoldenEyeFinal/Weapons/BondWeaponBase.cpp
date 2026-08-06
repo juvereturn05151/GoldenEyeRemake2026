@@ -87,6 +87,15 @@ void ABondWeaponBase::StartReload()
 
 	UWorld* World = GetWorld();
 
+	if (ReloadSound && World)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			World,
+			ReloadSound,
+			GetActorLocation()
+		);
+	}
+
 	if (World && ReloadDuration > 0.0f)
 	{
 		World->GetTimerManager().SetTimer(

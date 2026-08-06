@@ -13,6 +13,7 @@ E-mail: juvereturn@gmail.com
 class USceneComponent;
 class USkeletalMeshComponent;
 class UAnimMontage;
+class USoundBase;
 class APawn;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
@@ -134,6 +135,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Effects", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USoundBase> ShootSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Effects", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USoundBase> ReloadSound;
 
 	bool bIsFiring = false;
 	bool bIsReloading = false;

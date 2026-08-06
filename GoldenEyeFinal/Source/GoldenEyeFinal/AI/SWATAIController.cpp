@@ -147,6 +147,18 @@ void ASWATAIController::SetIsSearching(bool bNewSearching)
 	SyncPerceptionBlackboard();
 }
 
+void ASWATAIController::CommandInvestigateLocation(const FVector& Location)
+{
+	LastKnownLocation = Location;
+	bHasValidLastKnownLocation = true;
+	bShouldInvestigate = true;
+	bIsSearching = true;
+	TargetActor = nullptr;
+	SyncBlackboard();
+
+	MoveToLocation(LastKnownLocation);
+}
+
 void ASWATAIController::HandleTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 	if (Stimulus.Type == UAISense::GetSenseID<UAISense_Sight>())

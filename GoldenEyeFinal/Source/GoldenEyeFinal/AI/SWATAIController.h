@@ -49,6 +49,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SWAT|AI")
 	void SetIsSearching(bool bNewSearching);
 
+	UFUNCTION(BlueprintCallable, Category = "SWAT|AI")
+	void CommandInvestigateLocation(const FVector& Location);
+
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
 	virtual void OnUnPossess() override;

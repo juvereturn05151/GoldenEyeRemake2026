@@ -13,16 +13,9 @@ public:
 	UBTService_SWATUpdateCombatState();
 
 protected:
-	virtual void OnBecomeRelevant(
-		UBehaviorTreeComponent& OwnerComp,
-		uint8* NodeMemory
-	) override;
+	virtual void OnBecomeRelevant(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 
-	virtual void TickNode(
-		UBehaviorTreeComponent& OwnerComp,
-		uint8* NodeMemory,
-		float DeltaSeconds
-	) override;
+	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SWAT|Combat", meta = (ClampMin = "0.0"))
 	float TooCloseDistance = 400.0f;
