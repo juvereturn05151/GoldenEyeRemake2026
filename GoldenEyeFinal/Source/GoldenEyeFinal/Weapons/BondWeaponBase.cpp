@@ -304,13 +304,19 @@ void ABondWeaponBase::PlayFirstPersonMontage(UAnimMontage* MontageToPlay) const
 
 FVector ABondWeaponBase::GetTraceStart() const
 {
-	if (
-		WeaponMesh &&
-		MuzzleSocketName != NAME_None &&
-		WeaponMesh->DoesSocketExist(MuzzleSocketName)
-		)
+	const APawn* OwnerPawn = Cast<APawn>(GetOwner());
+
+	if (OwnerPawn && OwnerPawn->GetController())
 	{
-		return WeaponMesh->GetSocketLocation(MuzzleSocketName);
+		FVector ViewLocation;
+		FRotator ViewRotation;
+
+		OwnerPawn->GetController()->GetPlayerViewPoint(
+			ViewLocation,
+			ViewRotation
+		);
+
+		return ViewLocation;
 	}
 
 	if (MuzzlePoint)
