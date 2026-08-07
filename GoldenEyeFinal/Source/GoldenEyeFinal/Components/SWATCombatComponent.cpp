@@ -158,8 +158,6 @@ bool USWATCombatComponent::CanStartBurst() const
 		!SWATOwner->IsDead() &&
 		!SWATOwner->IsHitReacting() &&
 		bHasLineOfSight &&
-		!WeaponComponent->IsReloading() &&
-		WeaponComponent->GetMagazineAmmo() > 0 &&
 		!bBurstActive &&
 		!bBurstOnCooldown;
 }
@@ -267,20 +265,6 @@ bool USWATCombatComponent::AcceptFireProjectileNotify()
 		return false;
 	}
 
-	if (WeaponComponent->IsReloading())
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[SWAT Combat] Fire notify rejected: weapon is reloading"));
-		StopCombatBurst();
-		return false;
-	}
-
-	if (WeaponComponent->GetMagazineAmmo() <= 0)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[SWAT Combat] Fire notify rejected: magazine empty"));
-		StopCombatBurst();
-		return false;
-	}
-
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(FireNotifyTimeoutTimerHandle);
@@ -380,15 +364,10 @@ void USWATCombatComponent::HandleOwnerStateChanged()
 
 void USWATCombatComponent::HandleWeaponAmmoChanged(int32 MagazineAmmo, int32 ReserveAmmo)
 {
-	if (MagazineAmmo <= 0 && RemainingBurstShots > 1)
-	{
-		StopCombatBurst();
-	}
 }
 
 void USWATCombatComponent::HandleWeaponReloadStarted()
 {
-	StopCombatBurst();
 }
 
 void USWATCombatComponent::BeginBurstShots()
@@ -501,9 +480,7 @@ bool USWATCombatComponent::ValidateBurstContinuation() const
 		WeaponComponent &&
 		!SWATOwner->IsDead() &&
 		!SWATOwner->IsHitReacting() &&
-		bHasLineOfSight &&
-		!WeaponComponent->IsReloading() &&
-		WeaponComponent->GetMagazineAmmo() > 0;
+		bHasLineOfSight;
 }
 
 ASWATEnemyCharacter* USWATCombatComponent::GetSWATOwner() const

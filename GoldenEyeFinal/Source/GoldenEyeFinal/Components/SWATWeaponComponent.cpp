@@ -171,20 +171,6 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 		return false;
 	}
 
-	if (bIsReloading)
-	{
-		bDrawDebugForNextShot = false;
-		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Weapon is reloading"));
-		return false;
-	}
-
-	if (CurrentMagazineAmmo <= 0)
-	{
-		bDrawDebugForNextShot = false;
-		UE_LOG(LogTemp, Warning, TEXT("[SWAT Fire Failed] Magazine empty"));
-		return false;
-	}
-
 	UWorld* World = GetWorld();
 
 	if (!World)
@@ -269,8 +255,6 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 	}
 	bDrawDebugForNextShot = false;
 
-	--CurrentMagazineAmmo;
-	BroadcastAmmoChanged();
 	OnProjectileFired.Broadcast(SpawnedProjectile);
 
 	const UProjectileMovementComponent* SpawnedMovement =
@@ -306,10 +290,7 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 
 bool USWATWeaponComponent::CanFire() const
 {
-	return
-		CanOwnerUseWeapon() &&
-		!bIsReloading &&
-		CurrentMagazineAmmo > 0;
+	return CanOwnerUseWeapon();
 }
 
 bool USWATWeaponComponent::StartReload()
