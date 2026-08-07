@@ -3,6 +3,7 @@
 #include "../Components/NPCHealthComponent.h"
 #include "../Components/SWATCombatComponent.h"
 #include "../Components/SWATWeaponComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "TimerManager.h"
@@ -51,6 +52,16 @@ void ASWATEnemyCharacter::BeginPlay()
 			&ASWATEnemyCharacter::HandleDeath
 		);
 	}
+}
+
+void ASWATEnemyCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UWorld* World = GetWorld())
+	{
+		World->GetTimerManager().ClearTimer(DeathCleanupTimer);
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 UNPCHealthComponent* ASWATEnemyCharacter::GetHealthComponent() const
@@ -190,6 +201,7 @@ void ASWATEnemyCharacter::HandleDeath()
 	StopCombatOnDeath();
 	BroadcastStateChanged();
 	OnSWATDeath();
+	ScheduleDeathCleanup();
 }
 
 void ASWATEnemyCharacter::HandleDamageTaken(float DamageAmount)
@@ -284,6 +296,58 @@ void ASWATEnemyCharacter::StopCombatOnDeath()
 	bIsReloading = false;
 	bHasLineOfSight = false;
 	bIsFiring = false;
+}
+
+void ASWATEnemyCharacter::ScheduleDeathCleanup()
+{
+	UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		DisableCollisionAndDestroy();
+		return;
+	}
+
+	World->GetTimerManager().ClearTimer(DeathCleanupTimer);
+
+	if (DeathDestroyDelay <= 0.0f)
+	{
+		DisableCollisionAndDestroy();
+		return;
+	}
+
+	World->GetTimerManager().SetTimer(
+		DeathCleanupTimer,
+		this,
+		&ASWATEnemyCharacter::DisableCollisionAndDestroy,
+		DeathDestroyDelay,
+		false
+	);
+}
+
+void ASWATEnemyCharacter::DisableCollisionAndDestroy()
+{
+	DisableAllCollision();
+	Destroy();
+}
+
+void ASWATEnemyCharacter::DisableAllCollision()
+{
+	SetActorEnableCollision(false);
+
+	TArray<UPrimitiveComponent*> PrimitiveComponents;
+	GetComponents<UPrimitiveComponent>(PrimitiveComponents);
+
+	for (UPrimitiveComponent* PrimitiveComponent : PrimitiveComponents)
+	{
+		if (!PrimitiveComponent)
+		{
+			continue;
+		}
+
+		PrimitiveComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		PrimitiveComponent->SetGenerateOverlapEvents(false);
+	}
 }
 
 void ASWATEnemyCharacter::EnableHitReaction()

@@ -66,6 +66,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "SWAT|State")
 	void OnSWATDeath();
@@ -87,6 +88,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|State", meta = (ClampMin = "0.0"))
 	float HitReactionMovementLockDuration = 0.30f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|State", meta = (ClampMin = "0.0"))
+	float DeathDestroyDelay = 4.0f;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|State")
 	bool bIsDead = false;
@@ -115,6 +119,9 @@ private:
 
 	void StopMovementOnDeath();
 	void StopCombatOnDeath();
+	void ScheduleDeathCleanup();
+	void DisableCollisionAndDestroy();
+	void DisableAllCollision();
 	void EnableHitReaction();
 	void LockMovementForHitReaction();
 	void RestoreMovementAfterHitReaction();
@@ -125,4 +132,5 @@ private:
 	uint8 PreviousCustomMovementMode = 0;
 	FTimerHandle HitReactionCooldownTimer;
 	FTimerHandle HitReactionMovementLockTimer;
+	FTimerHandle DeathCleanupTimer;
 };
