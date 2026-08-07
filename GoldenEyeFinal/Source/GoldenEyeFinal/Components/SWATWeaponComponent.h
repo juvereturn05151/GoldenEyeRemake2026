@@ -7,6 +7,7 @@
 class ASWATProjectile;
 class USceneComponent;
 class USkeletalMeshComponent;
+class USoundBase;
 class UStaticMeshComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
@@ -104,6 +105,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|Weapon")
 	FName MuzzleSocketName = TEXT("Muzzle");
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|Weapon|Audio")
+	TObjectPtr<USoundBase> FireSound;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|Weapon", meta = (ClampMin = "0.0"))
 	float BaseSpreadDegrees = 2.5f;

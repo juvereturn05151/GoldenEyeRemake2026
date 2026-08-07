@@ -10,6 +10,7 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/World.h"
 #include "GameFramework/ProjectileMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 
 USWATWeaponComponent::USWATWeaponComponent()
@@ -254,6 +255,15 @@ bool USWATWeaponComponent::FireProjectileAt(AActor* Target)
 		);
 	}
 	bDrawDebugForNextShot = false;
+
+	if (FireSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			FireSound,
+			MuzzleLocation
+		);
+	}
 
 	OnProjectileFired.Broadcast(SpawnedProjectile);
 
