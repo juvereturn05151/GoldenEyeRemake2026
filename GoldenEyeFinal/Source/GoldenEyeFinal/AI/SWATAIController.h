@@ -29,28 +29,13 @@ public:
 	AActor* GetTargetActor() const;
 
 	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
-	FVector GetLastKnownLocation() const;
-
-	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
 	FVector GetLastHeardLocation() const;
 
 	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
 	bool HasLineOfSight() const;
 
-	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
-	bool ShouldInvestigate() const;
-
-	UFUNCTION(BlueprintCallable, Category = "SWAT|AI")
-	void CompleteInvestigation();
-
 	UFUNCTION(BlueprintCallable, Category = "SWAT|AI")
 	void CompleteSearch();
-
-	UFUNCTION(BlueprintCallable, Category = "SWAT|AI")
-	void SetIsSearching(bool bNewSearching);
-
-	UFUNCTION(BlueprintCallable, Category = "SWAT|AI")
-	void CommandInvestigateLocation(const FVector& Location);
 
 protected:
 	virtual void OnPossess(APawn* InPawn) override;
@@ -109,12 +94,6 @@ protected:
 	TObjectPtr<AActor> TargetActor;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
-	FVector LastKnownLocation = FVector::ZeroVector;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
-	bool bHasValidLastKnownLocation = false;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
 	FVector LastHeardLocation = FVector::ZeroVector;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
@@ -122,15 +101,6 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
 	bool bHasLineOfSight = false;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
-	bool bShouldInvestigate = false;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
-	FVector HomeLocation = FVector::ZeroVector;
-
-	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|AI")
-	bool bIsSearching = false;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|AI|Combat", meta = (ClampMin = "0.0", AllowPrivateAccess = "true"))
 	float TooCloseDistance = 400.0f;
@@ -160,7 +130,6 @@ private:
 	void StopPerceptionDebug();
 	void DrawPerceptionDebug();
 	void DrawSightDebug() const;
-	void DrawLastKnownLocationDebug() const;
 	void DrawLastHeardLocationDebug() const;
 	void DrawPerceptionStateText() const;
 	void DrawCombatRotationDebug() const;

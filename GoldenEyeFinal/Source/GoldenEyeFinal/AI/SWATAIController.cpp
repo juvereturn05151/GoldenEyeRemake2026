@@ -17,16 +17,10 @@
 namespace SWATBlackboardKeys
 {
 	const FName TargetActor(TEXT("TargetActor"));
-	const FName LastKnownLocation(TEXT("LastKnownLocation"));
 	const FName LastHeardLocation(TEXT("LastHeardLocation"));
 	const FName HasLineOfSight(TEXT("HasLineOfSight"));
-	const FName ShouldInvestigate(TEXT("ShouldInvestigate"));
 	const FName IsDead(TEXT("IsDead"));
 	const FName IsHitReacting(TEXT("IsHitReacting"));
-	const FName IsInCombat(TEXT("IsInCombat"));
-	const FName HomeLocation(TEXT("HomeLocation"));
-	const FName IsSearching(TEXT("IsSearching"));
-	const FName DistanceToTarget(TEXT("DistanceToTarget"));
 	const FName IsTooFar(TEXT("IsTooFar"));
 	const FName IsTooClose(TEXT("IsTooClose"));
 	const FName IsInPreferredRange(TEXT("IsInPreferredRange"));
@@ -54,11 +48,6 @@ void ASWATAIController::OnPossess(APawn* InPawn)
 	SetActorTickEnabled(true);
 	ConfigurePerception();
 	BindControlledSWAT(InPawn);
-
-	if (InPawn)
-	{
-		HomeLocation = InPawn->GetActorLocation();
-	}
 
 	if (BehaviorTreeAsset)
 	{
@@ -90,11 +79,6 @@ AActor* ASWATAIController::GetTargetActor() const
 	return TargetActor;
 }
 
-FVector ASWATAIController::GetLastKnownLocation() const
-{
-	return LastKnownLocation;
-}
-
 FVector ASWATAIController::GetLastHeardLocation() const
 {
 	return LastHeardLocation;
@@ -105,21 +89,8 @@ bool ASWATAIController::HasLineOfSight() const
 	return bHasLineOfSight;
 }
 
-bool ASWATAIController::ShouldInvestigate() const
-{
-	return bShouldInvestigate;
-}
-
-void ASWATAIController::CompleteInvestigation()
-{
-	bShouldInvestigate = false;
-	SyncPerceptionBlackboard();
-}
-
 void ASWATAIController::CompleteSearch()
 {
-	SetIsSearching(false);
-
 	if (bHasLineOfSight)
 	{
 		return;
@@ -133,30 +104,6 @@ void ASWATAIController::CompleteSearch()
 	}
 
 	SyncBlackboard();
-}
-
-void ASWATAIController::SetIsSearching(bool bNewSearching)
-{
-	if (bIsSearching == bNewSearching)
-	{
-		SyncPerceptionBlackboard();
-		return;
-	}
-
-	bIsSearching = bNewSearching;
-	SyncPerceptionBlackboard();
-}
-
-void ASWATAIController::CommandInvestigateLocation(const FVector& Location)
-{
-	LastKnownLocation = Location;
-	bHasValidLastKnownLocation = true;
-	bShouldInvestigate = true;
-	bIsSearching = true;
-	TargetActor = nullptr;
-	SyncBlackboard();
-
-	MoveToLocation(LastKnownLocation);
 }
 
 void ASWATAIController::HandleTargetPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
@@ -239,10 +186,6 @@ void ASWATAIController::HandleSightStimulus(AActor* Actor, const FAIStimulus& St
 	{
 		TargetActor = Actor;
 		bHasLineOfSight = true;
-		bShouldInvestigate = false;
-		SetIsSearching(false);
-		LastKnownLocation = Actor->GetActorLocation();
-		bHasValidLastKnownLocation = true;
 		SetFocus(TargetActor, EAIFocusPriority::Gameplay);
 
 		if (ControlledSWAT)
@@ -250,32 +193,6 @@ void ASWATAIController::HandleSightStimulus(AActor* Actor, const FAIStimulus& St
 			ControlledSWAT->SetInCombat(true);
 			ControlledSWAT->SetHasLineOfSight(true);
 		}
-
-#if ENABLE_DRAW_DEBUG
-		if (bDebugPerception)
-		{
-			if (UWorld* World = GetWorld())
-			{
-				DrawDebugSphere(
-					World,
-					LastKnownLocation,
-					DebugSphereRadius,
-					12,
-					FColor::Green,
-					false,
-					2.0f
-				);
-			}
-
-			UE_LOG(
-				LogTemp,
-				Log,
-				TEXT("[SWAT Sight Gained] Actor=%s Location=%s"),
-				*GetNameSafe(Actor),
-				*LastKnownLocation.ToCompactString()
-			);
-		}
-#endif
 		return;
 	}
 
@@ -286,34 +203,6 @@ void ASWATAIController::HandleSightStimulus(AActor* Actor, const FAIStimulus& St
 	{
 		ControlledSWAT->SetHasLineOfSight(false);
 	}
-
-#if ENABLE_DRAW_DEBUG
-	if (bDebugPerception)
-	{
-		if (UWorld* World = GetWorld())
-		{
-			DrawDebugSphere(
-				World,
-				LastKnownLocation,
-				DebugSphereRadius,
-				12,
-				FColor::Red,
-				false,
-				3.0f
-			);
-		}
-
-		UE_LOG(
-			LogTemp,
-			Log,
-			TEXT("[SWAT Sight Lost] Actor=%s LastKnown=%s"),
-			*GetNameSafe(Actor),
-			bHasValidLastKnownLocation
-				? *LastKnownLocation.ToCompactString()
-				: TEXT("Invalid")
-		);
-	}
-#endif
 }
 
 void ASWATAIController::HandleHearingStimulus(AActor* Actor, const FAIStimulus& Stimulus)
@@ -325,12 +214,6 @@ void ASWATAIController::HandleHearingStimulus(AActor* Actor, const FAIStimulus& 
 
 	LastHeardLocation = Stimulus.StimulusLocation;
 	bHasValidLastHeardLocation = true;
-	bShouldInvestigate = true;
-
-	if (!bHasLineOfSight)
-	{
-		SetIsSearching(true);
-	}
 
 #if ENABLE_DRAW_DEBUG
 	if (bDebugPerception)
@@ -348,13 +231,8 @@ void ASWATAIController::HandleHearingStimulus(AActor* Actor, const FAIStimulus& 
 			);
 		}
 
-		UE_LOG(
-			LogTemp,
-			Log,
-			TEXT("[SWAT Heard] Instigator=%s Location=%s"),
-			*GetNameSafe(Actor),
-			*LastHeardLocation.ToCompactString()
-		);
+		UE_LOG(LogTemp, Log, TEXT("[SWAT Heard] Instigator=%s Location=%s"), 
+			*GetNameSafe(Actor), *LastHeardLocation.ToCompactString());
 	}
 #endif
 }
@@ -395,10 +273,7 @@ void ASWATAIController::UnbindControlledSWAT()
 		return;
 	}
 
-	ControlledSWAT->OnSWATStateChanged.RemoveDynamic(
-		this,
-		&ASWATAIController::HandleControlledSWATStateChanged
-	);
+	ControlledSWAT->OnSWATStateChanged.RemoveDynamic(this, &ASWATAIController::HandleControlledSWATStateChanged);
 
 	ControlledSWAT = nullptr;
 }
@@ -419,18 +294,7 @@ void ASWATAIController::SyncPerceptionBlackboard()
 		return;
 	}
 
-	BlackboardComponent->SetValueAsObject(
-		SWATBlackboardKeys::TargetActor,
-		TargetActor
-	);
-
-	if (bHasValidLastKnownLocation)
-	{
-		BlackboardComponent->SetValueAsVector(
-			SWATBlackboardKeys::LastKnownLocation,
-			LastKnownLocation
-		);
-	}
+	BlackboardComponent->SetValueAsObject(SWATBlackboardKeys::TargetActor, TargetActor);
 
 	if (bHasValidLastHeardLocation)
 	{
@@ -444,21 +308,6 @@ void ASWATAIController::SyncPerceptionBlackboard()
 		SWATBlackboardKeys::HasLineOfSight,
 		bHasLineOfSight
 	);
-
-	BlackboardComponent->SetValueAsBool(
-		SWATBlackboardKeys::ShouldInvestigate,
-		bShouldInvestigate
-	);
-
-	BlackboardComponent->SetValueAsVector(
-		SWATBlackboardKeys::HomeLocation,
-		HomeLocation
-	);
-
-	BlackboardComponent->SetValueAsBool(
-		SWATBlackboardKeys::IsSearching,
-		bIsSearching
-	);
 }
 
 void ASWATAIController::SyncSWATStateBlackboard()
@@ -470,12 +319,9 @@ void ASWATAIController::SyncSWATStateBlackboard()
 		return;
 	}
 
-	const bool bSWATIsDead =
-		ControlledSWAT ? ControlledSWAT->IsDead() : false;
-	const bool bSWATIsHitReacting =
-		ControlledSWAT ? ControlledSWAT->IsHitReacting() : false;
-	const bool bSWATIsInCombat =
-		ControlledSWAT ? ControlledSWAT->IsInCombat() : false;
+	const bool bSWATIsDead = ControlledSWAT ? ControlledSWAT->IsDead() : false;
+	const bool bSWATIsHitReacting = ControlledSWAT ? ControlledSWAT->IsHitReacting() : false;
+	const bool bSWATIsInCombat = ControlledSWAT ? ControlledSWAT->IsInCombat() : false;
 
 	BlackboardComponent->SetValueAsBool(
 		SWATBlackboardKeys::IsDead,
@@ -485,11 +331,6 @@ void ASWATAIController::SyncSWATStateBlackboard()
 	BlackboardComponent->SetValueAsBool(
 		SWATBlackboardKeys::IsHitReacting,
 		bSWATIsHitReacting
-	);
-
-	BlackboardComponent->SetValueAsBool(
-		SWATBlackboardKeys::IsInCombat,
-		bSWATIsInCombat
 	);
 }
 
@@ -550,9 +391,7 @@ void ASWATAIController::SyncCombatRangeBlackboard()
 	);
 }
 
-void ASWATAIController::ClearCombatRangeBlackboard(
-	UBlackboardComponent* BlackboardComponent
-) const
+void ASWATAIController::ClearCombatRangeBlackboard(UBlackboardComponent* BlackboardComponent) const
 {
 	if (!BlackboardComponent)
 	{
@@ -643,7 +482,6 @@ void ASWATAIController::DrawPerceptionDebug()
 	}
 
 	DrawSightDebug();
-	DrawLastKnownLocationDebug();
 	DrawLastHeardLocationDebug();
 	DrawPerceptionStateText();
 	DrawCombatRotationDebug();
@@ -752,85 +590,6 @@ void ASWATAIController::DrawSightDebug() const
 			DebugLineThickness
 		);
 	}
-	else if (TargetActor && bHasValidLastKnownLocation)
-	{
-		DrawDebugLine(
-			World,
-			EyeLocation,
-			LastKnownLocation,
-			FColor::Red,
-			false,
-			Lifetime,
-			0,
-			DebugLineThickness
-		);
-	}
-#endif
-}
-
-void ASWATAIController::DrawLastKnownLocationDebug() const
-{
-#if ENABLE_DRAW_DEBUG
-	if (!bHasValidLastKnownLocation)
-	{
-		return;
-	}
-
-	UWorld* World = GetWorld();
-	const APawn* ControlledPawn = GetPawn();
-
-	if (!World || !ControlledPawn)
-	{
-		return;
-	}
-
-	const float Lifetime =
-		FMath::Max(DebugDrawDuration, PerceptionDebugInterval + 0.01f);
-	const FVector MarkerTop =
-		LastKnownLocation + FVector(0.0f, 0.0f, DebugTextHeight);
-
-	DrawDebugSphere(
-		World,
-		LastKnownLocation,
-		DebugSphereRadius,
-		12,
-		FColor::Red,
-		false,
-		Lifetime
-	);
-
-	DrawDebugLine(
-		World,
-		LastKnownLocation,
-		MarkerTop,
-		FColor::Red,
-		false,
-		Lifetime,
-		0,
-		DebugLineThickness
-	);
-
-	DrawDebugString(
-		World,
-		MarkerTop,
-		TEXT("LAST KNOWN"),
-		nullptr,
-		FColor::Red,
-		Lifetime,
-		false
-	);
-
-	DrawDebugDirectionalArrow(
-		World,
-		ControlledPawn->GetActorLocation(),
-		LastKnownLocation,
-		DebugSphereRadius,
-		FColor::Red,
-		false,
-		Lifetime,
-		0,
-		DebugLineThickness
-	);
 #endif
 }
 
@@ -918,20 +677,14 @@ void ASWATAIController::DrawPerceptionStateText() const
 		FVector(0.0f, 0.0f, DebugTextHeight);
 	const FString TargetName =
 		TargetActor ? TargetActor->GetName() : TEXT("None");
-	const FString LastKnownText =
-		bHasValidLastKnownLocation
-			? LastKnownLocation.ToCompactString()
-			: TEXT("Invalid");
 	const FString LastHeardText =
 		bHasValidLastHeardLocation
 			? LastHeardLocation.ToCompactString()
 			: TEXT("Invalid");
 	const FString DebugText = FString::Printf(
-		TEXT("Target: %s\nHasLineOfSight: %s\nShouldInvestigate: %s\nLastKnownLocation: %s\nLastHeardLocation: %s"),
+		TEXT("Target: %s\nHasLineOfSight: %s\nLastHeardLocation: %s"),
 		*TargetName,
 		bHasLineOfSight ? TEXT("TRUE") : TEXT("FALSE"),
-		bShouldInvestigate ? TEXT("TRUE") : TEXT("FALSE"),
-		*LastKnownText,
 		*LastHeardText
 	);
 
@@ -972,23 +725,18 @@ void ASWATAIController::DrawCombatRotationDebug() const
 	const float PawnYaw = ControlledPawn->GetActorRotation().Yaw;
 	const float ControlYaw = GetControlRotation().Yaw;
 	const AActor* FocusActor = GetFocusActor();
-	const UCharacterMovementComponent* MovementComponent =
-		ControlledPawn->FindComponentByClass<UCharacterMovementComponent>();
+	const UCharacterMovementComponent* MovementComponent = ControlledPawn->FindComponentByClass<UCharacterMovementComponent>();
 
-	const bool bUseControllerRotationYaw =
-		ControlledPawn->bUseControllerRotationYaw;
-	const bool bOrientRotationToMovement =
-		MovementComponent ? MovementComponent->bOrientRotationToMovement : false;
+	const bool bUseControllerRotationYaw = ControlledPawn->bUseControllerRotationYaw;
+	const bool bOrientRotationToMovement = MovementComponent 
+		? MovementComponent->bOrientRotationToMovement : false;
 	const bool bUseControllerDesiredRotation =
 		MovementComponent ? MovementComponent->bUseControllerDesiredRotation : false;
 
-	const float Lifetime =
-		FMath::Max(DebugDrawDuration, PerceptionDebugInterval + 0.01f);
+	const float Lifetime = FMath::Max(DebugDrawDuration, PerceptionDebugInterval + 0.01f);
 	const float LineLength = 300.0f;
-	const FVector PawnForwardEnd =
-		PawnLocation + (ControlledPawn->GetActorForwardVector() * LineLength);
-	const FVector ControlForwardEnd =
-		PawnLocation + (GetControlRotation().Vector() * LineLength);
+	const FVector PawnForwardEnd = PawnLocation + (ControlledPawn->GetActorForwardVector() * LineLength);
+	const FVector ControlForwardEnd = PawnLocation + (GetControlRotation().Vector() * LineLength);
 
 	DrawDebugLine(
 		World,
