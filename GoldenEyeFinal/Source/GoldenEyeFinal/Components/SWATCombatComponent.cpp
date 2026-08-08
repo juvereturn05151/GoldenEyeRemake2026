@@ -66,19 +66,6 @@ bool USWATCombatComponent::StartCombatBurst(AActor* Target)
 		return false;
 	}
 
-	//Deactivate Ammo System Because There is no reason to use it
-	//if (WeaponComponent->IsReloading())
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("[SWAT Combat] Start burst rejected: weapon is reloading"));
-	//	return false;
-	//}
-
-	//if (WeaponComponent->GetMagazineAmmo() <= 0)
-	//{
-	//	UE_LOG(LogTemp, Warning, TEXT("[SWAT Combat] Start burst rejected: magazine empty"));
-	//	return false;
-	//}
-
 	if (bBurstActive)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[SWAT Combat] Start burst rejected: burst already active"));
@@ -147,10 +134,8 @@ void USWATCombatComponent::StopCombatBurst()
 
 bool USWATCombatComponent::CanStartBurst() const
 {
-	const ASWATEnemyCharacter* SWATOwner =
-		Cast<ASWATEnemyCharacter>(GetOwner());
-	const USWATWeaponComponent* WeaponComponent =
-		SWATOwner ? SWATOwner->GetWeaponComponent() : nullptr;
+	const ASWATEnemyCharacter* SWATOwner = Cast<ASWATEnemyCharacter>(GetOwner());
+	const USWATWeaponComponent* WeaponComponent = SWATOwner ? SWATOwner->GetWeaponComponent() : nullptr;
 
 	return
 		SWATOwner &&
