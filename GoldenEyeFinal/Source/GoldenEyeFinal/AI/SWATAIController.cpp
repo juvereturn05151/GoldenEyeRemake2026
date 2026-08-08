@@ -21,6 +21,7 @@ namespace SWATBlackboardKeys
 	const FName HasLineOfSight(TEXT("HasLineOfSight"));
 	const FName IsDead(TEXT("IsDead"));
 	const FName IsHitReacting(TEXT("IsHitReacting"));
+	const FName DistanceToTarget(TEXT("DistanceToTarget"));
 	const FName IsTooFar(TEXT("IsTooFar"));
 	const FName IsTooClose(TEXT("IsTooClose"));
 	const FName IsInPreferredRange(TEXT("IsInPreferredRange"));
@@ -77,6 +78,29 @@ void ASWATAIController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 AActor* ASWATAIController::GetTargetActor() const
 {
 	return TargetActor;
+}
+
+void ASWATAIController::SetTargetActor(AActor* NewTargetActor)
+{
+	TargetActor = NewTargetActor;
+	bHasLineOfSight = TargetActor ? LineOfSightTo(TargetActor) : false;
+
+	if (TargetActor)
+	{
+		SetFocus(TargetActor, EAIFocusPriority::Gameplay);
+	}
+	else
+	{
+		ClearFocus(EAIFocusPriority::Gameplay);
+	}
+
+	if (ControlledSWAT)
+	{
+		ControlledSWAT->SetInCombat(TargetActor != nullptr);
+		ControlledSWAT->SetHasLineOfSight(bHasLineOfSight);
+	}
+
+	SyncBlackboard();
 }
 
 FVector ASWATAIController::GetLastHeardLocation() const

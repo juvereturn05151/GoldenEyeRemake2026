@@ -14,7 +14,8 @@
 
 ABondWeaponBase::ABondWeaponBase()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	Root = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
@@ -40,36 +41,29 @@ void ABondWeaponBase::BeginPlay()
 	BroadcastAmmoChanged();
 }
 
+void ABondWeaponBase::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bIsFiring)
+	{
+		FireOnce();
+	}
+}
+
 void ABondWeaponBase::StartFire()
 {
 	bIsFiring = true;
 
 	FireOnce();
 
-	UWorld* World = GetWorld();
-
-	if (World && FireInterval > 0.0f)
-	{
-		World->GetTimerManager().SetTimer(
-			FireTimer,
-			this,
-			&ABondWeaponBase::FireOnce,
-			FireInterval,
-			true
-		);
-	}
+	SetActorTickEnabled(true);
 }
 
 void ABondWeaponBase::StopFire()
 {
 	bIsFiring = false;
-
-	UWorld* World = GetWorld();
-
-	if (World)
-	{
-		World->GetTimerManager().ClearTimer(FireTimer);
-	}
+	SetActorTickEnabled(false);
 }
 
 void ABondWeaponBase::StartReload()
@@ -142,7 +136,8 @@ bool ABondWeaponBase::CanFire() const
 {
 	const UWorld* World = GetWorld();
 
-	const bool bFireIntervalElapsed = !World ||World->GetTimeSeconds() - LastFireTime >= FireInterval;
+	const bool bFireIntervalElapsed =
+		!World || World->GetRealTimeSeconds() - LastFireTime >= FireInterval;
 
 	return !bIsReloading && MagazineAmmo > 0 && bFireIntervalElapsed;
 }
@@ -173,7 +168,7 @@ void ABondWeaponBase::FireOnce()
 
 	if (World)
 	{
-		LastFireTime = World->GetTimeSeconds();
+		LastFireTime = World->GetRealTimeSeconds();
 	}
 
 	--MagazineAmmo;

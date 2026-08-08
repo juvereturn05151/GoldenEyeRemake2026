@@ -28,6 +28,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
 	AActor* GetTargetActor() const;
 
+	UFUNCTION(BlueprintCallable, Category = "SWAT|AI")
+	void SetTargetActor(AActor* NewTargetActor);
+
 	UFUNCTION(BlueprintPure, Category = "SWAT|AI")
 	FVector GetLastHeardLocation() const;
 

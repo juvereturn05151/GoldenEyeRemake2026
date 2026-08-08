@@ -80,6 +80,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Weapon", meta = (AllowPrivateAccess = "true"))
@@ -143,7 +144,6 @@ private:
 	bool bIsReloading = false;
 	float LastFireTime = -BIG_NUMBER;
 
-	FTimerHandle FireTimer;
 	FTimerHandle ReloadTimer;
 
 	void FireOnce();
