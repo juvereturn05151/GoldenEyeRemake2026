@@ -18,6 +18,7 @@ void ABondPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	RestoreGameplayInput();
 	CreatePlayerWidgets();
 
 	if (MainHUDWidget && TimeSlowHUDWidget)
@@ -32,6 +33,7 @@ void ABondPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
 
+	RestoreGameplayInput();
 	PossessedBond = Cast<AJamesBondCharacter>(InPawn);
 	BindPossessedBondDelegates();
 }
@@ -189,6 +191,17 @@ void ABondPlayerController::ShowDeathWidget()
 		DeathWidget ? DeathWidget->TakeWidget() : TSharedPtr<SWidget>()
 	);
 	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputMode);
+}
+
+void ABondPlayerController::RestoreGameplayInput()
+{
+	SetPause(false);
+	bShowMouseCursor = false;
+	SetIgnoreMoveInput(false);
+	SetIgnoreLookInput(false);
+
+	FInputModeGameOnly InputMode;
 	SetInputMode(InputMode);
 }
 

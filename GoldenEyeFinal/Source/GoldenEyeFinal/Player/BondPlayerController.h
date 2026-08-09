@@ -111,6 +111,7 @@ private:
 
 	void CreatePlayerWidgets();
 	void ShowDeathWidget();
+	void RestoreGameplayInput();
 	void BindWeaponDelegates();
 
 	UFUNCTION()
