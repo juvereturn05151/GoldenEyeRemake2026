@@ -54,6 +54,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
@@ -106,6 +107,15 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> TimeSlowAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Death", meta = (AllowPrivateAccess = "true", ClampMin = "0.01"))
+	float DeathFallDuration = 1.15f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Death", meta = (AllowPrivateAccess = "true"))
+	FVector DeathCameraLocationOffset = FVector(25.0f, 12.0f, -58.0f);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Death", meta = (AllowPrivateAccess = "true"))
+	FRotator DeathCameraRotationOffset = FRotator(-68.0f, 0.0f, 18.0f);
+
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void StartJump();
@@ -117,4 +127,18 @@ private:
 	void HandleTimeSlowCompleted();
 	void AttachWeaponRootToConfiguredSocket();
 	void InitializeInputMapping();
+
+	UFUNCTION()
+	void HandleDeath();
+
+	void StartDeathFall();
+	void UpdateDeathFall(float DeltaTime);
+	void DisableBondOnDeath();
+
+	bool bIsDeathFalling = false;
+	float DeathFallElapsed = 0.0f;
+	FVector DeathCameraStartLocation = FVector::ZeroVector;
+	FVector DeathCameraTargetLocation = FVector::ZeroVector;
+	FRotator DeathCameraStartRotation = FRotator::ZeroRotator;
+	FRotator DeathCameraTargetRotation = FRotator::ZeroRotator;
 };

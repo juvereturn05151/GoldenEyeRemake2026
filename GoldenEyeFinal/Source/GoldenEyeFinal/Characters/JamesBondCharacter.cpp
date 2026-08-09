@@ -19,7 +19,8 @@
 
 AJamesBondCharacter::AJamesBondCharacter()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = true;
@@ -74,8 +75,26 @@ void AJamesBondCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (HealthComponent)
+	{
+		HealthComponent->OnDeath.AddUniqueDynamic(
+			this,
+			&AJamesBondCharacter::HandleDeath
+		);
+	}
+
 	AttachWeaponRootToConfiguredSocket();
 	InitializeInputMapping();
+}
+
+void AJamesBondCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (bIsDeathFalling)
+	{
+		UpdateDeathFall(DeltaTime);
+	}
 }
 
 void AJamesBondCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -195,6 +214,11 @@ void AJamesBondCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 
 void AJamesBondCharacter::Move(const FInputActionValue& Value)
 {
+	if (bIsDeathFalling)
+	{
+		return;
+	}
+
 	if (!Controller)
 	{
 		return;
@@ -216,6 +240,11 @@ void AJamesBondCharacter::Move(const FInputActionValue& Value)
 
 void AJamesBondCharacter::Look(const FInputActionValue& Value)
 {
+	if (bIsDeathFalling)
+	{
+		return;
+	}
+
 	const FVector2D Input = Value.Get<FVector2D>();
 
 	AddControllerYawInput(Input.X);
@@ -224,6 +253,11 @@ void AJamesBondCharacter::Look(const FInputActionValue& Value)
 
 void AJamesBondCharacter::StartJump()
 {
+	if (bIsDeathFalling)
+	{
+		return;
+	}
+
 	Jump();
 }
 
@@ -234,6 +268,11 @@ void AJamesBondCharacter::StopJump()
 
 void AJamesBondCharacter::HandleFireStarted()
 {
+	if (bIsDeathFalling)
+	{
+		return;
+	}
+
 	if (WeaponComponent)
 	{
 		WeaponComponent->StartFire();
@@ -250,6 +289,11 @@ void AJamesBondCharacter::HandleFireCompleted()
 
 void AJamesBondCharacter::HandleReload()
 {
+	if (bIsDeathFalling)
+	{
+		return;
+	}
+
 	if (WeaponComponent)
 	{
 		WeaponComponent->Reload();
@@ -273,6 +317,11 @@ void AJamesBondCharacter::CompleteReload()
 
 void AJamesBondCharacter::HandleTimeSlowStarted()
 {
+	if (bIsDeathFalling)
+	{
+		return;
+	}
+
 	if (TimeSlowComponent)
 	{
 		TimeSlowComponent->StartTimeSlow();
@@ -337,6 +386,94 @@ void AJamesBondCharacter::InitializeInputMapping()
 	if (Subsystem && DefaultMappingContext)
 	{
 		Subsystem->AddMappingContext(DefaultMappingContext,0);
+	}
+}
+
+void AJamesBondCharacter::HandleDeath()
+{
+	StartDeathFall();
+}
+
+void AJamesBondCharacter::StartDeathFall()
+{
+	if (bIsDeathFalling)
+	{
+		return;
+	}
+
+	DisableBondOnDeath();
+
+	bIsDeathFalling = true;
+	DeathFallElapsed = 0.0f;
+
+	if (FirstPersonCamera)
+	{
+		FirstPersonCamera->bUsePawnControlRotation = false;
+		DeathCameraStartLocation = FirstPersonCamera->GetRelativeLocation();
+		DeathCameraStartRotation = FirstPersonCamera->GetRelativeRotation();
+		DeathCameraTargetLocation = DeathCameraStartLocation + DeathCameraLocationOffset;
+		DeathCameraTargetRotation = DeathCameraStartRotation + DeathCameraRotationOffset;
+	}
+
+	SetActorTickEnabled(true);
+}
+
+void AJamesBondCharacter::UpdateDeathFall(float DeltaTime)
+{
+	if (!FirstPersonCamera)
+	{
+		bIsDeathFalling = false;
+		SetActorTickEnabled(false);
+		return;
+	}
+
+	DeathFallElapsed += DeltaTime;
+
+	const float Alpha = FMath::Clamp(
+		DeathFallElapsed / FMath::Max(DeathFallDuration, KINDA_SMALL_NUMBER),
+		0.0f,
+		1.0f
+	);
+
+	const float SmoothedAlpha = FMath::InterpEaseOut(0.0f, 1.0f, Alpha, 2.0f);
+
+	FirstPersonCamera->SetRelativeLocation(
+		FMath::Lerp(DeathCameraStartLocation, DeathCameraTargetLocation, SmoothedAlpha)
+	);
+
+	FirstPersonCamera->SetRelativeRotation(
+		FMath::Lerp(DeathCameraStartRotation, DeathCameraTargetRotation, SmoothedAlpha)
+	);
+
+	if (Alpha >= 1.0f)
+	{
+		bIsDeathFalling = false;
+		SetActorTickEnabled(false);
+	}
+}
+
+void AJamesBondCharacter::DisableBondOnDeath()
+{
+	if (WeaponComponent)
+	{
+		WeaponComponent->StopFire();
+	}
+
+	if (TimeSlowComponent)
+	{
+		TimeSlowComponent->StopTimeSlow();
+	}
+
+	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+	{
+		MovementComponent->StopMovementImmediately();
+		MovementComponent->DisableMovement();
+	}
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		PlayerController->SetIgnoreMoveInput(true);
+		PlayerController->SetIgnoreLookInput(true);
 	}
 }
 

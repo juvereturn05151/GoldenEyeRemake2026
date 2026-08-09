@@ -86,6 +86,14 @@ private:
 	)
 	TSubclassOf<UUserWidget> DeathWidgetClass;
 
+	UPROPERTY(
+		EditDefaultsOnly,
+		BlueprintReadOnly,
+		Category = "Bond|UI",
+		meta = (AllowPrivateAccess = "true", ClampMin = "0.0")
+	)
+	float DeathWidgetDelay = 1.15f;
+
 	UPROPERTY()
 	TObjectPtr<UUserWidget> MainHUDWidget;
 
@@ -99,6 +107,7 @@ private:
 	TObjectPtr<AJamesBondCharacter> PossessedBond;
 
 	FTimerHandle DeferredWeaponBindingTimer;
+	FTimerHandle DeathWidgetTimer;
 
 	void CreatePlayerWidgets();
 	void ShowDeathWidget();

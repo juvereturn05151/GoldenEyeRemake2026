@@ -264,7 +264,22 @@ void ABondPlayerController::HandleRegenerationStateChanged(
 
 void ABondPlayerController::HandleDeath()
 {
-	ShowDeathWidget();
+	if (UWorld* World = GetWorld(); World && DeathWidgetDelay > 0.0f)
+	{
+		World->GetTimerManager().ClearTimer(DeathWidgetTimer);
+		World->GetTimerManager().SetTimer(
+			DeathWidgetTimer,
+			this,
+			&ABondPlayerController::ShowDeathWidget,
+			DeathWidgetDelay,
+			false
+		);
+	}
+	else
+	{
+		ShowDeathWidget();
+	}
+
 	HandleBondDeath();
 }
 
