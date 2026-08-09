@@ -14,10 +14,7 @@ ASWATProjectile::ASWATProjectile()
 
 	CollisionComponent->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	CollisionComponent->SetCollisionObjectType(ECC_WorldDynamic);
-	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
-	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldStatic, ECR_Block);
-	CollisionComponent->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Block);
-	CollisionComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Block);
+	CollisionComponent->SetCollisionResponseToAllChannels(ECR_Block);
 	CollisionComponent->SetNotifyRigidBodyCollision(true);
 	CollisionComponent->OnComponentHit.AddDynamic(
 		this,
@@ -104,6 +101,11 @@ void ASWATProjectile::HandleImpact(
 {
 	if (!OtherActor || OtherActor == this || OtherActor == GetOwner() || OtherActor == GetInstigator())
 	{
+		if (!OtherActor)
+		{
+			Destroy();
+		}
+
 		return;
 	}
 
