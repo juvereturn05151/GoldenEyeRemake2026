@@ -60,6 +60,12 @@ void ABondWeaponBase::Tick(float DeltaTime)
 
 void ABondWeaponBase::StartFire()
 {
+	if (!bIsReloading && MagazineAmmo <= 0 && ReserveAmmo > 0)
+	{
+		StartReload();
+		return;
+	}
+
 	bIsFiring = true;
 
 	FireOnce();
