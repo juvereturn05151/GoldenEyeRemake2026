@@ -112,11 +112,25 @@ protected:
 
 private:
 	UFUNCTION()
+	void HandlePointDamage(
+		AActor* DamagedActor,
+		float Damage,
+		AController* InstigatedBy,
+		FVector HitLocation,
+		UPrimitiveComponent* FHitComponent,
+		FName BoneName,
+		FVector ShotFromDirection,
+		const UDamageType* DamageType,
+		AActor* DamageCauser
+	);
+
+	UFUNCTION()
 	void HandleDeath();
 
 	UFUNCTION()
 	void HandleDamageTaken(float DamageAmount);
 
+	bool IsHeadshotBone(FName BoneName) const;
 	void StopMovementOnDeath();
 	void StopCombatOnDeath();
 	void ScheduleDeathCleanup();
@@ -133,4 +147,13 @@ private:
 	FTimerHandle HitReactionCooldownTimer;
 	FTimerHandle HitReactionMovementLockTimer;
 	FTimerHandle DeathCleanupTimer;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|Combat|Headshots", meta = (AllowPrivateAccess = "true", ClampMin = "1.0"))
+	float HeadshotDamageMultiplier = 4.0f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|Combat|Headshots", meta = (AllowPrivateAccess = "true"))
+	bool bInstantKillHeadshots = false;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|Combat|Headshots", meta = (AllowPrivateAccess = "true"))
+	TArray<FName> HeadshotBoneNames = { TEXT("head"), TEXT("Head") };
 };

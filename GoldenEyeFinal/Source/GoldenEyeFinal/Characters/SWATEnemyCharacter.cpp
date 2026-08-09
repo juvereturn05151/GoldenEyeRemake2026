@@ -42,6 +42,11 @@ void ASWATEnemyCharacter::BeginPlay()
 
 	if (HealthComponent)
 	{
+		OnTakePointDamage.AddDynamic(
+			this,
+			&ASWATEnemyCharacter::HandlePointDamage
+		);
+
 		HealthComponent->OnDamageTaken.AddDynamic(
 			this,
 			&ASWATEnemyCharacter::HandleDamageTaken
@@ -56,6 +61,8 @@ void ASWATEnemyCharacter::BeginPlay()
 
 void ASWATEnemyCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+	OnTakePointDamage.RemoveDynamic(this, &ASWATEnemyCharacter::HandlePointDamage);
+
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(DeathCleanupTimer);
@@ -177,6 +184,47 @@ void ASWATEnemyCharacter::ConfirmFireProjectileFromAnimation()
 	CombatComponent->ConfirmFireProjectileFromAnimation();
 }
 
+void ASWATEnemyCharacter::HandlePointDamage(
+	AActor* DamagedActor,
+	float Damage,
+	AController* InstigatedBy,
+	FVector HitLocation,
+	UPrimitiveComponent* FHitComponent,
+	FName BoneName,
+	FVector ShotFromDirection,
+	const UDamageType* DamageType,
+	AActor* DamageCauser
+)
+{
+	if (bIsDead || !HealthComponent || Damage <= 0.0f)
+	{
+		return;
+	}
+
+	float FinalDamage = Damage;
+	const bool bIsHeadshot = IsHeadshotBone(BoneName);
+
+	if (bIsHeadshot)
+	{
+		FinalDamage = bInstantKillHeadshots
+			? HealthComponent->GetCurrentHealth()
+			: Damage * HeadshotDamageMultiplier;
+	}
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[SWAT Damage] Headshot=%s Bone=%s BaseDamage=%.2f FinalDamage=%.2f HitComponent=%s"),
+		bIsHeadshot ? TEXT("TRUE") : TEXT("FALSE"),
+		*BoneName.ToString(),
+		Damage,
+		FinalDamage,
+		*GetNameSafe(FHitComponent)
+	);
+
+	HealthComponent->ApplyDamage(FinalDamage);
+}
+
 void ASWATEnemyCharacter::HandleDeath()
 {
 	if (bIsDead)
@@ -260,6 +308,24 @@ void ASWATEnemyCharacter::HandleDamageTaken(float DamageAmount)
 			false
 		);
 	}
+}
+
+bool ASWATEnemyCharacter::IsHeadshotBone(FName BoneName) const
+{
+	if (BoneName.IsNone())
+	{
+		return false;
+	}
+
+	for (const FName HeadshotBoneName : HeadshotBoneNames)
+	{
+		if (BoneName.IsEqual(HeadshotBoneName, ENameCase::IgnoreCase))
+		{
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void ASWATEnemyCharacter::StopMovementOnDeath()
