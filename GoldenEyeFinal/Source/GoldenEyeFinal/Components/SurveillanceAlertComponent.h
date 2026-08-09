@@ -21,6 +21,12 @@ public:
 	USurveillanceAlertComponent();
 
 	UFUNCTION(BlueprintCallable, Category = "Surveillance Camera|Alert")
+	void SetAlertLight(ULightComponent* InAlertLight);
+
+	UFUNCTION(BlueprintPure, Category = "Surveillance Camera|Alert")
+	ULightComponent* GetAlertLight() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Surveillance Camera|Alert")
 	void StartAlertFlash(float OverrideDuration = -1.0f);
 
 	UFUNCTION(BlueprintCallable, Category = "Surveillance Camera|Alert")
@@ -34,7 +40,7 @@ protected:
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Surveillance Camera|Alert", meta = (AllowPrivateAccess = "true", UseComponentPicker, AllowedClasses = "/Script/Engine.LightComponent"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Surveillance Camera|Alert", meta = (AllowPrivateAccess = "true", UseComponentPicker, AllowedClasses = "/Script/Engine.LightComponent"))
 	TObjectPtr<ULightComponent> AlertLight;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Surveillance Camera|Alert", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))

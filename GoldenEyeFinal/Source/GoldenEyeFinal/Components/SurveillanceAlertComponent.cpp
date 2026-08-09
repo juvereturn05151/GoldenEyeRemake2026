@@ -29,6 +29,27 @@ void USurveillanceAlertComponent::EndPlay(const EEndPlayReason::Type EndPlayReas
 	Super::EndPlay(EndPlayReason);
 }
 
+void USurveillanceAlertComponent::SetAlertLight(ULightComponent* InAlertLight)
+{
+	if (bIsFlashing)
+	{
+		StopAlertFlash();
+	}
+
+	AlertLight = InAlertLight;
+	CacheOriginalLightState();
+
+	if (AlertLight && bHideAlertLightOnBeginPlay)
+	{
+		AlertLight->SetVisibility(false);
+	}
+}
+
+ULightComponent* USurveillanceAlertComponent::GetAlertLight() const
+{
+	return AlertLight;
+}
+
 void USurveillanceAlertComponent::StartAlertFlash(float OverrideDuration)
 {
 	UWorld* World = GetWorld();
@@ -118,14 +139,7 @@ bool USurveillanceAlertComponent::IsAlertFlashing() const
 
 ULightComponent* USurveillanceAlertComponent::ResolveAlertLight() const
 {
-	if (AlertLight)
-	{
-		return AlertLight;
-	}
-
-	const AActor* OwnerActor = GetOwner();
-
-	return OwnerActor ? OwnerActor->FindComponentByClass<ULightComponent>() : nullptr;
+	return AlertLight;
 }
 
 void USurveillanceAlertComponent::ToggleAlertLight()
