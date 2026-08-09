@@ -7,6 +7,7 @@
 #include "../Weapons/BondWeaponBase.h"
 #include "Blueprint/UserWidget.h"
 #include "Engine/World.h"
+#include "GameFramework/Pawn.h"
 #include "TimerManager.h"
 
 ABondPlayerController::ABondPlayerController()
@@ -43,6 +44,11 @@ UUserWidget* ABondPlayerController::GetMainHUDWidget() const
 UUserWidget* ABondPlayerController::GetTimeSlowHUDWidget() const
 {
 	return TimeSlowHUDWidget;
+}
+
+UUserWidget* ABondPlayerController::GetDeathWidget() const
+{
+	return DeathWidget;
 }
 
 void ABondPlayerController::BindPossessedBondDelegates()
@@ -158,6 +164,34 @@ void ABondPlayerController::CreatePlayerWidgets()
 	}
 }
 
+void ABondPlayerController::ShowDeathWidget()
+{
+	if (!IsLocalController())
+	{
+		return;
+	}
+
+	if (!DeathWidget && DeathWidgetClass)
+	{
+		DeathWidget = CreateWidget<UUserWidget>(this, DeathWidgetClass);
+	}
+
+	if (DeathWidget && !DeathWidget->IsInViewport())
+	{
+		DeathWidget->AddToViewport(100);
+	}
+
+	SetPause(true);
+	bShowMouseCursor = true;
+
+	FInputModeUIOnly InputMode;
+	InputMode.SetWidgetToFocus(
+		DeathWidget ? DeathWidget->TakeWidget() : TSharedPtr<SWidget>()
+	);
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	SetInputMode(InputMode);
+}
+
 void ABondPlayerController::BindWeaponDelegates()
 {
 	if (!PossessedBond)
@@ -230,6 +264,7 @@ void ABondPlayerController::HandleRegenerationStateChanged(
 
 void ABondPlayerController::HandleDeath()
 {
+	ShowDeathWidget();
 	HandleBondDeath();
 }
 

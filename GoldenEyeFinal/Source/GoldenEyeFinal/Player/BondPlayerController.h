@@ -27,6 +27,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Bond|UI")
 	UUserWidget* GetTimeSlowHUDWidget() const;
 
+	UFUNCTION(BlueprintPure, Category = "Bond|UI")
+	UUserWidget* GetDeathWidget() const;
+
 	UFUNCTION(BlueprintCallable, Category = "Bond|UI")
 	void BindPossessedBondDelegates();
 
@@ -75,6 +78,14 @@ private:
 	)
 	TSubclassOf<UUserWidget> TimeSlowHUDWidgetClass;
 
+	UPROPERTY(
+		EditDefaultsOnly,
+		BlueprintReadOnly,
+		Category = "Bond|UI",
+		meta = (AllowPrivateAccess = "true")
+	)
+	TSubclassOf<UUserWidget> DeathWidgetClass;
+
 	UPROPERTY()
 	TObjectPtr<UUserWidget> MainHUDWidget;
 
@@ -82,11 +93,15 @@ private:
 	TObjectPtr<UUserWidget> TimeSlowHUDWidget;
 
 	UPROPERTY()
+	TObjectPtr<UUserWidget> DeathWidget;
+
+	UPROPERTY()
 	TObjectPtr<AJamesBondCharacter> PossessedBond;
 
 	FTimerHandle DeferredWeaponBindingTimer;
 
 	void CreatePlayerWidgets();
+	void ShowDeathWidget();
 	void BindWeaponDelegates();
 
 	UFUNCTION()
