@@ -11,6 +11,7 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "../Components/BondFootstepComponent.h"
 #include "../Components/BondHealthComponent.h"
 #include "../Components/BondTimeSlowComponent.h"
 #include "../Components/BondWeaponComponent.h"
@@ -65,6 +66,8 @@ AJamesBondCharacter::AJamesBondCharacter()
 	WeaponComponent =CreateDefaultSubobject<UBondWeaponComponent>(TEXT("WeaponComponent"));
 
 	TimeSlowComponent =CreateDefaultSubobject<UBondTimeSlowComponent>(TEXT("TimeSlowComponent"));
+
+	FootstepComponent = CreateDefaultSubobject<UBondFootstepComponent>(TEXT("FootstepComponent"));
 }
 
 void AJamesBondCharacter::BeginPlay()
@@ -360,4 +363,9 @@ UBondWeaponComponent* AJamesBondCharacter::GetWeaponComponent() const
 UBondTimeSlowComponent* AJamesBondCharacter::GetTimeSlowComponent() const
 {
 	return TimeSlowComponent;
+}
+
+UBondFootstepComponent* AJamesBondCharacter::GetFootstepComponent() const
+{
+	return FootstepComponent;
 }

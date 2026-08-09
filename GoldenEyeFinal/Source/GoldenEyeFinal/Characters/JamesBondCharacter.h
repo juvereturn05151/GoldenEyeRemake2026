@@ -12,6 +12,7 @@ E-mail: juvereturn@gmail.com
 #include "JamesBondCharacter.generated.h"
 
 class UAudioComponent;
+class UBondFootstepComponent;
 class UBondHealthComponent;
 class UBondTimeSlowComponent;
 class UBondWeaponComponent;
@@ -45,6 +46,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Bond|Components")
 	UBondTimeSlowComponent* GetTimeSlowComponent() const;
 
+	UFUNCTION(BlueprintPure, Category = "Bond|Components")
+	UBondFootstepComponent* GetFootstepComponent() const;
+
 	UFUNCTION(BlueprintCallable, Category = "Bond|Weapon")
 	void CompleteReload();
 
@@ -77,6 +81,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UBondTimeSlowComponent> TimeSlowComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Bond|Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UBondFootstepComponent> FootstepComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
