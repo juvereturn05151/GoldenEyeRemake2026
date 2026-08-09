@@ -8,6 +8,12 @@ class AJamesBondCharacter;
 class ASWATEnemyCharacter;
 class ATargetPoint;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(
+	FEnemySpawnerBondSignature,
+	AActor*,
+	BondActor
+);
+
 UCLASS(ClassGroup = (Spawning), meta = (BlueprintSpawnableComponent))
 class GOLDENEYEFINAL_API UEnemySpawnerComponent : public UBoxComponent
 {
@@ -24,6 +30,12 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Enemy Spawner")
 	float GetBondInsideTime() const;
+
+	UPROPERTY(BlueprintAssignable, Category = "Enemy Spawner")
+	FEnemySpawnerBondSignature OnBondEnteredSpawner;
+
+	UPROPERTY(BlueprintAssignable, Category = "Enemy Spawner")
+	FEnemySpawnerBondSignature OnSpawnerActivated;
 
 protected:
 	virtual void BeginPlay() override;
@@ -60,6 +72,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy Spawner")
 	bool bResetInsideTimeOnBondExit = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy Spawner|Alert")
+	TArray<TObjectPtr<AActor>> AlertCameraActors;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy Spawner|Alert", meta = (ClampMin = "0.0"))
+	float AlertFlashDuration = 3.0f;
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Enemy Spawner")
 	int32 ActivationCount = 0;
 
@@ -87,6 +105,7 @@ private:
 
 	bool IsBondActor(const AActor* Actor) const;
 	bool CanActivate() const;
+	void TriggerAlertCameras(AActor* BondActor);
 	void ActivateSpawner();
 	void SpawnSWAT(AActor* BondActor);
 	FTransform GetSpawnTransform(int32 SpawnIndex) const;

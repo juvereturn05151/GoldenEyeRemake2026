@@ -10,6 +10,8 @@ E-mail: juvereturn@gmail.com
 #include "Components/ActorComponent.h"
 #include "BondHealthComponent.generated.h"
 
+class USoundBase;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
 	FBondHealthChangedSignature,
 	float,
@@ -102,6 +104,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Bond|Health", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float LowHealthThreshold = 0.30f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Health|Audio", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USoundBase> HitSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Health|Audio", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
+	float HitSoundVolume = 1.0f;
+
 	bool bIsDead = false;
 	bool bIsRegenerating = false;
 
@@ -112,5 +120,6 @@ private:
 	void StartRegeneration();
 	void RegenerateHealth();
 	void StopRegeneration();
+	void PlayHitSound() const;
 	void BroadcastHealthChanged();
 };

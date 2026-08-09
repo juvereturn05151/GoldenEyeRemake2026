@@ -2,6 +2,7 @@
 
 #include "../AI/SWATAIController.h"
 #include "../Characters/JamesBondCharacter.h"
+#include "SurveillanceAlertComponent.h"
 #include "../Characters/SWATEnemyCharacter.h"
 #include "AIController.h"
 #include "Engine/TargetPoint.h"
@@ -92,6 +93,8 @@ void UEnemySpawnerComponent::HandleBeginOverlap(
 	}
 
 	CurrentBondActor = OtherActor;
+	OnBondEnteredSpawner.Broadcast(OtherActor);
+	TriggerAlertCameras(OtherActor);
 }
 
 void UEnemySpawnerComponent::HandleEndOverlap(
@@ -138,6 +141,57 @@ bool UEnemySpawnerComponent::CanActivate() const
 		SpawnCountPerActivation > 0;
 }
 
+void UEnemySpawnerComponent::TriggerAlertCameras(AActor* BondActor)
+{
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[Enemy Spawner] TriggerAlertCameras Owner=%s Bond=%s AlertCameraCount=%d"),
+		*GetNameSafe(GetOwner()),
+		*GetNameSafe(BondActor),
+		AlertCameraActors.Num()
+	);
+
+	for (AActor* AlertCameraActor : AlertCameraActors)
+	{
+		if (!AlertCameraActor)
+		{
+			UE_LOG(
+				LogTemp,
+				Warning,
+				TEXT("[Enemy Spawner] Alert camera entry is null SpawnerOwner=%s"),
+				*GetNameSafe(GetOwner())
+			);
+			continue;
+		}
+
+		USurveillanceAlertComponent* AlertComponent =
+			AlertCameraActor->FindComponentByClass<USurveillanceAlertComponent>();
+
+		if (!AlertComponent)
+		{
+			UE_LOG(
+				LogTemp,
+				Warning,
+				TEXT("[Enemy Spawner] Alert camera has no SurveillanceAlertComponent Camera=%s SpawnerOwner=%s"),
+				*GetNameSafe(AlertCameraActor),
+				*GetNameSafe(GetOwner())
+			);
+			continue;
+		}
+
+		UE_LOG(
+			LogTemp,
+			Log,
+			TEXT("[Enemy Spawner] Starting camera alert Camera=%s Duration=%.2f"),
+			*GetNameSafe(AlertCameraActor),
+			AlertFlashDuration
+		);
+
+		AlertComponent->StartAlertFlash(AlertFlashDuration);
+	}
+}
+
 void UEnemySpawnerComponent::ActivateSpawner()
 {
 	if (!CurrentBondActor || !CanActivate())
@@ -151,6 +205,8 @@ void UEnemySpawnerComponent::ActivateSpawner()
 	}
 
 	++ActivationCount;
+	TriggerAlertCameras(CurrentBondActor);
+	OnSpawnerActivated.Broadcast(CurrentBondActor);
 }
 
 void UEnemySpawnerComponent::SpawnSWAT(AActor* BondActor)

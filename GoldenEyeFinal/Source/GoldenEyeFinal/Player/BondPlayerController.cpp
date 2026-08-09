@@ -248,6 +248,11 @@ void ABondPlayerController::BindWeaponDelegates()
 		this,
 		&ABondPlayerController::HandleAmmoChanged
 	);
+
+	HandleAmmoChanged(
+		EquippedWeapon->GetMagazineAmmo(),
+		EquippedWeapon->GetReserveAmmo()
+	);
 }
 
 void ABondPlayerController::HandleHealthChanged(

@@ -63,6 +63,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Bond|Weapon|Ammo")
 	int32 AddReserveAmmo(int32 AmmoAmount);
 
+	UFUNCTION(BlueprintPure, Category = "Bond|Weapon|Ammo")
+	int32 GetMagazineAmmo() const;
+
+	UFUNCTION(BlueprintPure, Category = "Bond|Weapon|Ammo")
+	int32 GetReserveAmmo() const;
+
 	UFUNCTION(BlueprintPure, Category = "Bond|Weapon")
 	USceneComponent* GetMuzzlePoint() const;
 

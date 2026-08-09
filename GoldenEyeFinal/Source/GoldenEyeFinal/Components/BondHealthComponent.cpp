@@ -1,6 +1,7 @@
 #include "BondHealthComponent.h"
 
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "TimerManager.h"
 
 namespace
@@ -51,6 +52,12 @@ void UBondHealthComponent::ApplyDamage(float DamageAmount)
 
 	const float AppliedDamage = PreviousHealth - CurrentHealth;
 
+	if (AppliedDamage <= 0.0f)
+	{
+		return;
+	}
+
+	PlayHitSound();
 	OnDamageTaken.Broadcast(AppliedDamage);
 	BroadcastHealthChanged();
 
@@ -209,6 +216,22 @@ void UBondHealthComponent::StopRegeneration()
 		bIsRegenerating = false;
 		OnRegenerationStateChanged.Broadcast(false);
 	}
+}
+
+void UBondHealthComponent::PlayHitSound() const
+{
+	UWorld* World = GetWorld();
+
+	if (!World || !HitSound)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySound2D(
+		World,
+		HitSound,
+		HitSoundVolume
+	);
 }
 
 void UBondHealthComponent::BroadcastHealthChanged()

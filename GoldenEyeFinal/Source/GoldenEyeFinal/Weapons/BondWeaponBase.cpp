@@ -192,6 +192,16 @@ int32 ABondWeaponBase::AddReserveAmmo(int32 AmmoAmount)
 	return AddedAmmo;
 }
 
+int32 ABondWeaponBase::GetMagazineAmmo() const
+{
+	return MagazineAmmo;
+}
+
+int32 ABondWeaponBase::GetReserveAmmo() const
+{
+	return ReserveAmmo;
+}
+
 USceneComponent* ABondWeaponBase::GetMuzzlePoint() const
 {
 	return MuzzlePoint;
