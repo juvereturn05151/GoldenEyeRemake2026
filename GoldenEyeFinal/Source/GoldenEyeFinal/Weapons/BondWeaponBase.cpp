@@ -36,7 +36,14 @@ void ABondWeaponBase::BeginPlay()
 
 	MagazineAmmo = FMath::Clamp(MagazineAmmo, 0, MagazineCapacity);
 
-	ReserveAmmo = FMath::Max(0, StartingReserveAmmo);
+	if (MaxReserveAmmo > 0)
+	{
+		ReserveAmmo = FMath::Clamp(StartingReserveAmmo, 0, MaxReserveAmmo);
+	}
+	else
+	{
+		ReserveAmmo = FMath::Max(0, StartingReserveAmmo);
+	}
 
 	BroadcastAmmoChanged();
 }
@@ -57,7 +64,7 @@ void ABondWeaponBase::StartFire()
 
 	FireOnce();
 
-	SetActorTickEnabled(true);
+	SetActorTickEnabled(bIsAutomatic);
 }
 
 void ABondWeaponBase::StopFire()
@@ -147,6 +154,38 @@ bool ABondWeaponBase::CanReload() const
 	return !bIsReloading && MagazineAmmo < MagazineCapacity && ReserveAmmo > 0;
 }
 
+int32 ABondWeaponBase::AddReserveAmmo(int32 AmmoAmount)
+{
+	if (AmmoAmount <= 0)
+	{
+		return 0;
+	}
+
+	const int32 PreviousReserveAmmo = ReserveAmmo;
+
+	if (MaxReserveAmmo > 0)
+	{
+		ReserveAmmo = FMath::Clamp(
+			ReserveAmmo + AmmoAmount,
+			0,
+			MaxReserveAmmo
+		);
+	}
+	else
+	{
+		ReserveAmmo += AmmoAmount;
+	}
+
+	const int32 AddedAmmo = ReserveAmmo - PreviousReserveAmmo;
+
+	if (AddedAmmo > 0)
+	{
+		BroadcastAmmoChanged();
+	}
+
+	return AddedAmmo;
+}
+
 USceneComponent* ABondWeaponBase::GetMuzzlePoint() const
 {
 	return MuzzlePoint;
@@ -159,6 +198,12 @@ FName ABondWeaponBase::GetMuzzleSocketName() const
 
 void ABondWeaponBase::FireOnce()
 {
+	if (!bIsAutomatic)
+	{
+		bIsFiring = false;
+		SetActorTickEnabled(false);
+	}
+
 	if (!CanFire())
 	{
 		return;

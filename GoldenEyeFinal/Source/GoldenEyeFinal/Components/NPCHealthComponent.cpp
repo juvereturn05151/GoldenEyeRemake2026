@@ -37,6 +37,17 @@ void UNPCHealthComponent::ApplyDamage(float DamageAmount)
 		return;
 	}
 
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[NPC Health] Owner=%s AppliedDamage=%.2f PreviousHealth=%.2f CurrentHealth=%.2f MaxHealth=%.2f"),
+		*GetNameSafe(GetOwner()),
+		AppliedDamage,
+		PreviousHealth,
+		CurrentHealth,
+		MaxHealth
+	);
+
 	OnDamageTaken.Broadcast(AppliedDamage);
 	BroadcastHealthChanged();
 

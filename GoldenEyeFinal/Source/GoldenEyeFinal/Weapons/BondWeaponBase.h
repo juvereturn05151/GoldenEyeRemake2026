@@ -60,6 +60,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Bond|Weapon")
 	bool CanReload() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Bond|Weapon|Ammo")
+	int32 AddReserveAmmo(int32 AmmoAmount);
+
 	UFUNCTION(BlueprintPure, Category = "Bond|Weapon")
 	USceneComponent* GetMuzzlePoint() const;
 
@@ -104,11 +107,17 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Ammo", meta = (AllowPrivateAccess = "true", ClampMin = "0"))
 	int32 StartingReserveAmmo = 32;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Ammo", meta = (AllowPrivateAccess = "true", ClampMin = "0"))
+	int32 MaxReserveAmmo = 64;
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Bond|Weapon|Ammo", meta = (AllowPrivateAccess = "true"))
 	int32 ReserveAmmo = 32;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
 	float FireInterval = 0.25f;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon", meta = (AllowPrivateAccess = "true"))
+	bool bIsAutomatic = false;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Reload", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
 	float ReloadDuration = 1.5f;

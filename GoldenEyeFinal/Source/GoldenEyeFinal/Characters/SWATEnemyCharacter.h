@@ -25,6 +25,13 @@ class GOLDENEYEFINAL_API ASWATEnemyCharacter : public ACharacter
 public:
 	ASWATEnemyCharacter();
 
+	virtual float TakeDamage(
+		float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		AController* EventInstigator,
+		AActor* DamageCauser
+	) override;
+
 	UFUNCTION(BlueprintPure, Category = "SWAT|Components")
 	UNPCHealthComponent* GetHealthComponent() const;
 
@@ -112,24 +119,16 @@ protected:
 
 private:
 	UFUNCTION()
-	void HandlePointDamage(
-		AActor* DamagedActor,
-		float Damage,
-		AController* InstigatedBy,
-		FVector HitLocation,
-		UPrimitiveComponent* FHitComponent,
-		FName BoneName,
-		FVector ShotFromDirection,
-		const UDamageType* DamageType,
-		AActor* DamageCauser
-	);
-
-	UFUNCTION()
 	void HandleDeath();
 
 	UFUNCTION()
 	void HandleDamageTaken(float DamageAmount);
 
+	void ApplySWATDamage(
+		float Damage,
+		FName BoneName,
+		UPrimitiveComponent* HitComponent
+	);
 	bool IsHeadshotBone(FName BoneName) const;
 	void StopMovementOnDeath();
 	void StopCombatOnDeath();

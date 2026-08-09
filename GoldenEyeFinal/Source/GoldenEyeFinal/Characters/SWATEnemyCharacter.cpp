@@ -4,6 +4,7 @@
 #include "../Components/SWATCombatComponent.h"
 #include "../Components/SWATWeaponComponent.h"
 #include "Components/PrimitiveComponent.h"
+#include "Engine/DamageEvents.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "TimerManager.h"
@@ -42,17 +43,12 @@ void ASWATEnemyCharacter::BeginPlay()
 
 	if (HealthComponent)
 	{
-		OnTakePointDamage.AddDynamic(
-			this,
-			&ASWATEnemyCharacter::HandlePointDamage
-		);
-
-		HealthComponent->OnDamageTaken.AddDynamic(
+		HealthComponent->OnDamageTaken.AddUniqueDynamic(
 			this,
 			&ASWATEnemyCharacter::HandleDamageTaken
 		);
 
-		HealthComponent->OnDeath.AddDynamic(
+		HealthComponent->OnDeath.AddUniqueDynamic(
 			this,
 			&ASWATEnemyCharacter::HandleDeath
 		);
@@ -61,8 +57,6 @@ void ASWATEnemyCharacter::BeginPlay()
 
 void ASWATEnemyCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	OnTakePointDamage.RemoveDynamic(this, &ASWATEnemyCharacter::HandlePointDamage);
-
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(DeathCleanupTimer);
@@ -184,16 +178,39 @@ void ASWATEnemyCharacter::ConfirmFireProjectileFromAnimation()
 	CombatComponent->ConfirmFireProjectileFromAnimation();
 }
 
-void ASWATEnemyCharacter::HandlePointDamage(
-	AActor* DamagedActor,
-	float Damage,
-	AController* InstigatedBy,
-	FVector HitLocation,
-	UPrimitiveComponent* FHitComponent,
-	FName BoneName,
-	FVector ShotFromDirection,
-	const UDamageType* DamageType,
+float ASWATEnemyCharacter::TakeDamage(
+	float DamageAmount,
+	FDamageEvent const& DamageEvent,
+	AController* EventInstigator,
 	AActor* DamageCauser
+)
+{
+	if (bIsDead || !HealthComponent || DamageAmount <= 0.0f)
+	{
+		return 0.0f;
+	}
+
+	FName BoneName = NAME_None;
+	UPrimitiveComponent* HitComponent = nullptr;
+
+	if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+	{
+		const FPointDamageEvent* PointDamageEvent =
+			static_cast<const FPointDamageEvent*>(&DamageEvent);
+
+		BoneName = PointDamageEvent->HitInfo.BoneName;
+		HitComponent = PointDamageEvent->HitInfo.GetComponent();
+	}
+
+	ApplySWATDamage(DamageAmount, BoneName, HitComponent);
+
+	return DamageAmount;
+}
+
+void ASWATEnemyCharacter::ApplySWATDamage(
+	float Damage,
+	FName BoneName,
+	UPrimitiveComponent* HitComponent
 )
 {
 	if (bIsDead || !HealthComponent || Damage <= 0.0f)
@@ -219,7 +236,7 @@ void ASWATEnemyCharacter::HandlePointDamage(
 		*BoneName.ToString(),
 		Damage,
 		FinalDamage,
-		*GetNameSafe(FHitComponent)
+		*GetNameSafe(HitComponent)
 	);
 
 	HealthComponent->ApplyDamage(FinalDamage);
