@@ -1,7 +1,10 @@
 #include "SurveillanceAlertComponent.h"
 
+#include "Components/AudioComponent.h"
 #include "Components/LightComponent.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
+#include "EnemySpawnerComponent.h"
 #include "TimerManager.h"
 
 USurveillanceAlertComponent::USurveillanceAlertComponent()
@@ -20,11 +23,25 @@ void USurveillanceAlertComponent::BeginPlay()
 	{
 		AlertLight->SetVisibility(false);
 	}
+
+	if (bBindLinkedSpawnersOnBeginPlay)
+	{
+		BindLinkedEnemySpawners();
+	}
 }
 
 void USurveillanceAlertComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	StopAlertFlash();
+	UnbindLinkedEnemySpawners();
+
+	if (
+		EndPlayReason == EEndPlayReason::Destroyed &&
+		bDestroyLinkedSpawnersOnCameraDestroyed
+		)
+	{
+		DestroyLinkedEnemySpawners();
+	}
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -82,6 +99,7 @@ void USurveillanceAlertComponent::StartAlertFlash(float OverrideDuration)
 
 	bIsFlashing = true;
 	ApplyAlertLightState(true);
+	PlayAlertSound();
 
 	World->GetTimerManager().SetTimer(
 		FlashToggleTimer,
@@ -115,6 +133,8 @@ void USurveillanceAlertComponent::StopAlertFlash()
 		World->GetTimerManager().ClearTimer(FlashStopTimer);
 	}
 
+	StopAlertSound();
+
 	if (!bIsFlashing)
 	{
 		return;
@@ -137,9 +157,82 @@ bool USurveillanceAlertComponent::IsAlertFlashing() const
 	return bIsFlashing;
 }
 
+void USurveillanceAlertComponent::BindLinkedEnemySpawners()
+{
+	for (UEnemySpawnerComponent* LinkedEnemySpawner : LinkedEnemySpawners)
+	{
+		if (!LinkedEnemySpawner)
+		{
+			continue;
+		}
+
+		LinkedEnemySpawner->OnBondEnteredSpawner.RemoveDynamic(
+			this,
+			&USurveillanceAlertComponent::HandleLinkedSpawnerTriggered
+		);
+		LinkedEnemySpawner->OnBondEnteredSpawner.AddDynamic(
+			this,
+			&USurveillanceAlertComponent::HandleLinkedSpawnerTriggered
+		);
+
+		LinkedEnemySpawner->OnSpawnerActivated.RemoveDynamic(
+			this,
+			&USurveillanceAlertComponent::HandleLinkedSpawnerTriggered
+		);
+		LinkedEnemySpawner->OnSpawnerActivated.AddDynamic(
+			this,
+			&USurveillanceAlertComponent::HandleLinkedSpawnerTriggered
+		);
+	}
+}
+
 ULightComponent* USurveillanceAlertComponent::ResolveAlertLight() const
 {
 	return AlertLight;
+}
+
+void USurveillanceAlertComponent::UnbindLinkedEnemySpawners()
+{
+	for (UEnemySpawnerComponent* LinkedEnemySpawner : LinkedEnemySpawners)
+	{
+		if (!LinkedEnemySpawner)
+		{
+			continue;
+		}
+
+		LinkedEnemySpawner->OnBondEnteredSpawner.RemoveDynamic(
+			this,
+			&USurveillanceAlertComponent::HandleLinkedSpawnerTriggered
+		);
+
+		LinkedEnemySpawner->OnSpawnerActivated.RemoveDynamic(
+			this,
+			&USurveillanceAlertComponent::HandleLinkedSpawnerTriggered
+		);
+	}
+}
+
+void USurveillanceAlertComponent::DestroyLinkedEnemySpawners()
+{
+	AActor* OwnerActor = GetOwner();
+
+	for (UEnemySpawnerComponent* LinkedEnemySpawner : LinkedEnemySpawners)
+	{
+		if (!LinkedEnemySpawner)
+		{
+			continue;
+		}
+
+		AActor* SpawnerOwner = LinkedEnemySpawner->GetOwner();
+
+		if (SpawnerOwner && SpawnerOwner != OwnerActor)
+		{
+			SpawnerOwner->Destroy();
+			continue;
+		}
+
+		LinkedEnemySpawner->DestroyComponent();
+	}
 }
 
 void USurveillanceAlertComponent::ToggleAlertLight()
@@ -164,6 +257,60 @@ void USurveillanceAlertComponent::ApplyAlertLightState(bool bLightOn)
 	AlertLight->SetVisibility(bLightOn);
 }
 
+void USurveillanceAlertComponent::PlayAlertSound()
+{
+	UWorld* World = GetWorld();
+
+	if (!World || !AlertSound)
+	{
+		return;
+	}
+
+	StopAlertSound();
+
+	if (bPlayAlertSound2D)
+	{
+		ActiveAlertAudioComponent = UGameplayStatics::SpawnSound2D(
+			World,
+			AlertSound,
+			AlertSoundVolume,
+			AlertSoundPitch,
+			0.0f,
+			nullptr,
+			false,
+			false
+		);
+		return;
+	}
+
+	const AActor* OwnerActor = GetOwner();
+
+	ActiveAlertAudioComponent = UGameplayStatics::SpawnSoundAtLocation(
+		World,
+		AlertSound,
+		OwnerActor ? OwnerActor->GetActorLocation() : FVector::ZeroVector,
+		FRotator::ZeroRotator,
+		AlertSoundVolume,
+		AlertSoundPitch,
+		0.0f,
+		nullptr,
+		nullptr,
+		false
+	);
+}
+
+void USurveillanceAlertComponent::StopAlertSound()
+{
+	if (!ActiveAlertAudioComponent)
+	{
+		return;
+	}
+
+	ActiveAlertAudioComponent->Stop();
+	ActiveAlertAudioComponent->DestroyComponent();
+	ActiveAlertAudioComponent = nullptr;
+}
+
 void USurveillanceAlertComponent::CacheOriginalLightState()
 {
 	if (!AlertLight)
@@ -186,4 +333,9 @@ void USurveillanceAlertComponent::RestoreOriginalLightState()
 	AlertLight->SetLightColor(OriginalLightColor);
 	AlertLight->SetIntensity(OriginalIntensity);
 	AlertLight->SetVisibility(bOriginalVisibility && !bHideAlertLightOnBeginPlay);
+}
+
+void USurveillanceAlertComponent::HandleLinkedSpawnerTriggered(AActor* BondActor)
+{
+	StartAlertFlash();
 }
