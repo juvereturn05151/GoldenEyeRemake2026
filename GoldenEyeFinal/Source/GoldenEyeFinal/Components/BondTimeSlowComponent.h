@@ -10,6 +10,8 @@ E-mail: juvereturn@gmail.com
 #include "Components/ActorComponent.h"
 #include "BondTimeSlowComponent.generated.h"
 
+class USoundBase;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(
 	FBondTimeSlowMeterChangedSignature,
 	float,
@@ -87,6 +89,15 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Time Slow", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
 	float RegenerationDelay = 1.0f;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Time Slow|Audio", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USoundBase> TimeSlowStartSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Time Slow|Audio", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USoundBase> TimeSlowStopSound;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Time Slow|Audio", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
+	float TimeSlowSoundVolume = 1.0f;
+
 	bool bIsActive = false;
 	float InactiveRealSeconds = 0.0f;
 	float LastRealTimeSeconds = 0.0f;
@@ -96,5 +107,6 @@ private:
 	void SetCurrentMeter(float NewMeter);
 	void ApplyTimeDilation();
 	void ClearTimeDilation();
+	void PlayTimeSlowSound(USoundBase* Sound) const;
 	void BroadcastMeterChanged();
 };

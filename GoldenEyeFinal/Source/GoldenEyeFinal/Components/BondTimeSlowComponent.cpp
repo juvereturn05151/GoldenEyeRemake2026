@@ -78,6 +78,7 @@ void UBondTimeSlowComponent::StartTimeSlow()
 	InactiveRealSeconds = 0.0f;
 
 	ApplyTimeDilation();
+	PlayTimeSlowSound(TimeSlowStartSound);
 	OnTimeSlowStateChanged.Broadcast(true);
 }
 
@@ -92,6 +93,7 @@ void UBondTimeSlowComponent::StopTimeSlow()
 	InactiveRealSeconds = 0.0f;
 
 	ClearTimeDilation();
+	PlayTimeSlowSound(TimeSlowStopSound);
 	OnTimeSlowStateChanged.Broadcast(false);
 }
 
@@ -204,6 +206,22 @@ void UBondTimeSlowComponent::ClearTimeDilation()
 	{
 		OwnerActor->CustomTimeDilation = 1.0f;
 	}
+}
+
+void UBondTimeSlowComponent::PlayTimeSlowSound(USoundBase* Sound) const
+{
+	UWorld* World = GetWorld();
+
+	if (!Sound || !World)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySound2D(
+		World,
+		Sound,
+		TimeSlowSoundVolume
+	);
 }
 
 void UBondTimeSlowComponent::BroadcastMeterChanged()
