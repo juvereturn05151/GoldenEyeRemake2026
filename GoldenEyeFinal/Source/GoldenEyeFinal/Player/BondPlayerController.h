@@ -11,6 +11,7 @@ E-mail: juvereturn@gmail.com
 #include "BondPlayerController.generated.h"
 
 class AJamesBondCharacter;
+class UMissionObjective;
 class UUserWidget;
 
 UCLASS()
@@ -30,11 +31,38 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Bond|UI")
 	UUserWidget* GetDeathWidget() const;
 
+	UFUNCTION(BlueprintPure, Category = "Bond|UI")
+	UUserWidget* GetInteractionPromptWidget() const;
+
 	UFUNCTION(BlueprintCallable, Category = "Bond|UI")
 	void BindPossessedBondDelegates();
 
+	UFUNCTION(BlueprintCallable, Category = "Bond|UI")
+	void ShowInteractionPrompt(const FText& PromptText);
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|UI")
+	void HideInteractionPrompt();
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Mission UI")
+	void InitializeMissionObjectiveUI();
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Mission UI")
+	void ToggleMissionPanel();
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Mission UI")
+	void SetMissionPanelVisible(bool bVisible);
+
+	UFUNCTION(BlueprintPure, Category = "Bond|Mission UI")
+	bool IsMissionPanelVisible() const;
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "Bond|UI")
 	void OnPlayerWidgetsCreated();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Bond|Mission UI")
+	void OnMissionObjectiveUIInitialized(const TArray<UMissionObjective*>& ActiveObjectives);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Bond|Mission UI")
+	void OnMissionPanelVisibilityChanged(bool bVisible);
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Bond|UI")
 	void UpdateDamageState(float CurrentHealth,float MaxHealth,float HealthPercent);
@@ -90,6 +118,22 @@ private:
 		EditDefaultsOnly,
 		BlueprintReadOnly,
 		Category = "Bond|UI",
+		meta = (AllowPrivateAccess = "true")
+	)
+	TSubclassOf<UUserWidget> InteractionPromptWidgetClass;
+
+	UPROPERTY(
+		EditDefaultsOnly,
+		BlueprintReadOnly,
+		Category = "Bond|UI",
+		meta = (AllowPrivateAccess = "true")
+	)
+	FName InteractionPromptTextBlockName = TEXT("PromptText");
+
+	UPROPERTY(
+		EditDefaultsOnly,
+		BlueprintReadOnly,
+		Category = "Bond|UI",
 		meta = (AllowPrivateAccess = "true", ClampMin = "0.0")
 	)
 	float DeathWidgetDelay = 1.15f;
@@ -104,10 +148,17 @@ private:
 	TObjectPtr<UUserWidget> DeathWidget;
 
 	UPROPERTY()
+	TObjectPtr<UUserWidget> InteractionPromptWidget;
+
+	UPROPERTY()
 	TObjectPtr<AJamesBondCharacter> PossessedBond;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Bond|Mission UI", meta = (AllowPrivateAccess = "true"))
+	bool bMissionPanelVisible = true;
 
 	FTimerHandle DeferredWeaponBindingTimer;
 	FTimerHandle DeathWidgetTimer;
+	FTimerHandle DeferredMissionUIInitializationTimer;
 
 	void CreatePlayerWidgets();
 	void ShowDeathWidget();
@@ -138,4 +189,10 @@ private:
 
 	UFUNCTION()
 	void HandleTimeSlowStateChanged(bool bIsActive);
+
+	UFUNCTION()
+	void HandleMissionObjectiveProgressChanged(FName ObjectiveId, int32 CurrentProgress, int32 RequiredProgress);
+
+	UFUNCTION()
+	void HandleMissionObjectiveCompleted(FName ObjectiveId);
 };

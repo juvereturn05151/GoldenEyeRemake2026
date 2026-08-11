@@ -22,6 +22,8 @@ class UInputComponent;
 class UInputMappingContext;
 class USceneComponent;
 class USkeletalMeshComponent;
+class ACopyOpportunity;
+class APhotoOpportunity;
 
 UCLASS()
 class GOLDENEYEFINAL_API AJamesBondCharacter : public ACharacter
@@ -51,6 +53,24 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Bond|Weapon")
 	void CompleteReload();
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
+	void SetCopyOpportunity(ACopyOpportunity* CopyOpportunity);
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
+	void ClearCopyOpportunity(ACopyOpportunity* CopyOpportunity);
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
+	void TryCopyInteraction();
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
+	void SetPhotoOpportunity(APhotoOpportunity* PhotoOpportunity);
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
+	void ClearPhotoOpportunity(APhotoOpportunity* PhotoOpportunity);
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
+	void TakePhoto();
 
 protected:
 	virtual void BeginPlay() override;
@@ -107,6 +127,21 @@ private:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> TimeSlowAction;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> TakePhotoAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> ToggleMissionPanelAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Input", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> InteractionAction;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Bond|Interactions", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<ACopyOpportunity> CurrentCopyOpportunity;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Bond|Interactions", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<APhotoOpportunity> CurrentPhotoOpportunity;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Death", meta = (AllowPrivateAccess = "true", ClampMin = "0.01"))
 	float DeathFallDuration = 1.15f;
 
@@ -125,6 +160,8 @@ private:
 	void HandleReload();
 	void HandleTimeSlowStarted();
 	void HandleTimeSlowCompleted();
+	void HandleInteraction();
+	void HandleToggleMissionPanel();
 	void AttachWeaponRootToConfiguredSocket();
 	void InitializeInputMapping();
 

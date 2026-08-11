@@ -46,6 +46,12 @@ public:
 	virtual FText GetProgressText() const;
 
 	UFUNCTION(BlueprintPure, Category = "Mission|Objective")
+	FText GetDisplayName() const;
+
+	UFUNCTION(BlueprintPure, Category = "Mission|Objective")
+	FText GetDescription() const;
+
+	UFUNCTION(BlueprintPure, Category = "Mission|Objective")
 	FName GetObjectiveId() const;
 
 	UFUNCTION(BlueprintPure, Category = "Mission|Objective")

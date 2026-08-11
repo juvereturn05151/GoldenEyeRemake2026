@@ -1,5 +1,8 @@
 #include "JamesBondCharacter.h"
 
+#include "../Actors/CopyOpportunity.h"
+#include "../Actors/PhotoOpportunity.h"
+#include "../Player/BondPlayerController.h"
 #include "Camera/CameraComponent.h"
 #include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -11,6 +14,7 @@
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "InputCoreTypes.h"
 #include "../Components/BondFootstepComponent.h"
 #include "../Components/BondHealthComponent.h"
 #include "../Components/BondTimeSlowComponent.h"
@@ -210,6 +214,54 @@ void AJamesBondCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 			&AJamesBondCharacter::HandleTimeSlowCompleted
 		);
 	}
+
+	if (TakePhotoAction)
+	{
+		EnhancedInput->BindAction(
+			TakePhotoAction,
+			ETriggerEvent::Started,
+			this,
+			&AJamesBondCharacter::TakePhoto
+		);
+	}
+
+	if (ToggleMissionPanelAction)
+	{
+		EnhancedInput->BindAction(
+			ToggleMissionPanelAction,
+			ETriggerEvent::Started,
+			this,
+			&AJamesBondCharacter::HandleToggleMissionPanel
+		);
+	}
+	else
+	{
+		PlayerInputComponent->BindKey(
+			EKeys::Tab,
+			IE_Pressed,
+			this,
+			&AJamesBondCharacter::HandleToggleMissionPanel
+		);
+	}
+
+	if (InteractionAction)
+	{
+		EnhancedInput->BindAction(
+			InteractionAction,
+			ETriggerEvent::Started,
+			this,
+			&AJamesBondCharacter::HandleInteraction
+		);
+	}
+	else
+	{
+		PlayerInputComponent->BindKey(
+			EKeys::P,
+			IE_Pressed,
+			this,
+			&AJamesBondCharacter::HandleInteraction
+		);
+	}
 }
 
 void AJamesBondCharacter::Move(const FInputActionValue& Value)
@@ -315,6 +367,64 @@ void AJamesBondCharacter::CompleteReload()
 	}
 }
 
+void AJamesBondCharacter::SetCopyOpportunity(ACopyOpportunity* CopyOpportunity)
+{
+	if (!CopyOpportunity)
+	{
+		return;
+	}
+
+	CurrentCopyOpportunity = CopyOpportunity;
+}
+
+void AJamesBondCharacter::ClearCopyOpportunity(ACopyOpportunity* CopyOpportunity)
+{
+	if (CurrentCopyOpportunity == CopyOpportunity)
+	{
+		CurrentCopyOpportunity = nullptr;
+	}
+}
+
+void AJamesBondCharacter::TryCopyInteraction()
+{
+	if (!CurrentCopyOpportunity)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s tried copy interaction with no active CopyOpportunity."), *GetName());
+		return;
+	}
+
+	CurrentCopyOpportunity->TryStartCopy();
+}
+
+void AJamesBondCharacter::SetPhotoOpportunity(APhotoOpportunity* PhotoOpportunity)
+{
+	if (!PhotoOpportunity)
+	{
+		return;
+	}
+
+	CurrentPhotoOpportunity = PhotoOpportunity;
+}
+
+void AJamesBondCharacter::ClearPhotoOpportunity(APhotoOpportunity* PhotoOpportunity)
+{
+	if (CurrentPhotoOpportunity == PhotoOpportunity)
+	{
+		CurrentPhotoOpportunity = nullptr;
+	}
+}
+
+void AJamesBondCharacter::TakePhoto()
+{
+	if (!CurrentPhotoOpportunity)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s tried to take a photo with no active PhotoOpportunity."), *GetName());
+		return;
+	}
+
+	CurrentPhotoOpportunity->TryTakePhoto();
+}
+
 void AJamesBondCharacter::HandleTimeSlowStarted()
 {
 	if (bIsDeathFalling)
@@ -333,6 +443,34 @@ void AJamesBondCharacter::HandleTimeSlowCompleted()
 	if (TimeSlowComponent)
 	{
 		TimeSlowComponent->StopTimeSlow();
+	}
+}
+
+void AJamesBondCharacter::HandleInteraction()
+{
+	if (bIsDeathFalling)
+	{
+		return;
+	}
+
+	if (CurrentPhotoOpportunity)
+	{
+		TakePhoto();
+		return;
+	}
+
+	if (CurrentCopyOpportunity)
+	{
+		TryCopyInteraction();
+		return;
+	}
+}
+
+void AJamesBondCharacter::HandleToggleMissionPanel()
+{
+	if (ABondPlayerController* BondController = Cast<ABondPlayerController>(Controller))
+	{
+		BondController->ToggleMissionPanel();
 	}
 }
 

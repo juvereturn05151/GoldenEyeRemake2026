@@ -6,6 +6,7 @@
 #include "GameplayMissionSubsystem.generated.h"
 
 class UMissionObjective;
+class UEventMissionObjective;
 class USurveillanceObjective;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(
@@ -60,7 +61,22 @@ public:
 	void StartMission();
 
 	UFUNCTION(BlueprintCallable, Category = "Mission")
-	USurveillanceObjective* StartSurveillanceObjective(FName ObjectiveId, FText DisplayName, FName TargetGroupId);
+	USurveillanceObjective* StartSurveillanceObjective(
+		FName ObjectiveId,
+		FText DisplayName,
+		FText Description,
+		FName TargetGroupId
+	);
+
+	UFUNCTION(BlueprintCallable, Category = "Mission")
+	UEventMissionObjective* StartEventObjective(
+		FName ObjectiveId,
+		FText DisplayName,
+		FText Description,
+		FName RequiredEventTag,
+		FName RequiredContextId,
+		int32 RequiredProgress = 1
+	);
 
 	UFUNCTION(BlueprintPure, Category = "Mission")
 	bool IsObjectiveCompleted(FName ObjectiveId) const;
@@ -70,6 +86,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "Mission")
 	UMissionObjective* GetObjective(FName ObjectiveId) const;
+
+	UFUNCTION(BlueprintPure, Category = "Mission")
+	const TArray<UMissionObjective*>& GetActiveObjectives() const;
 
 	int32 CountRegisteredActorsForGroup(FName GroupId) const;
 	bool IsRegisteredActorCompleted(AActor* MissionActor) const;

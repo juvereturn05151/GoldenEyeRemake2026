@@ -11,7 +11,12 @@ class GOLDENEYEFINAL_API USurveillanceObjective : public UMissionObjective
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Mission|Objective")
-	void InitializeSurveillanceObjective(FName InObjectiveId, FText InDisplayName, FName InTargetGroupId);
+	void InitializeSurveillanceObjective(
+		FName InObjectiveId,
+		FText InDisplayName,
+		FText InDescription,
+		FName InTargetGroupId
+	);
 
 	virtual void ActivateObjective() override;
 	virtual void HandleMissionEvent(const FMissionEventData& EventData) override;

@@ -2,10 +2,15 @@
 
 #include "GameplayMissionSubsystem.h"
 
-void USurveillanceObjective::InitializeSurveillanceObjective(FName InObjectiveId, FText InDisplayName, FName InTargetGroupId)
+void USurveillanceObjective::InitializeSurveillanceObjective(
+	FName InObjectiveId,
+	FText InDisplayName,
+	FText InDescription,
+	FName InTargetGroupId
+)
 {
 	TargetGroupId = InTargetGroupId;
-	InitializeObjective(InObjectiveId, InDisplayName, FText::GetEmpty(), 1);
+	InitializeObjective(InObjectiveId, InDisplayName, InDescription, 1);
 }
 
 void USurveillanceObjective::ActivateObjective()

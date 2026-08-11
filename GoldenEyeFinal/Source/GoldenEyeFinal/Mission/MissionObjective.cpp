@@ -9,7 +9,7 @@ void UMissionObjective::InitializeObjective(
 {
 	ObjectiveId = InObjectiveId;
 	DisplayName = InDisplayName;
-	Description = InDescription;
+	Description = InDescription.IsEmpty() ? InDisplayName : InDescription;
 	Status = EObjectiveStatus::Inactive;
 	CurrentProgress = 0;
 	RequiredProgress = FMath::Max(1, InRequiredProgress);
@@ -60,6 +60,16 @@ FText UMissionObjective::GetProgressText() const
 		FText::AsNumber(CurrentProgress),
 		FText::AsNumber(RequiredProgress)
 	);
+}
+
+FText UMissionObjective::GetDisplayName() const
+{
+	return DisplayName;
+}
+
+FText UMissionObjective::GetDescription() const
+{
+	return Description;
 }
 
 FName UMissionObjective::GetObjectiveId() const

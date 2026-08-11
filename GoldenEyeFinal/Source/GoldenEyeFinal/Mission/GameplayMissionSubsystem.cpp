@@ -1,5 +1,6 @@
 #include "GameplayMissionSubsystem.h"
 
+#include "EventMissionObjective.h"
 #include "MissionObjective.h"
 #include "MissionRelevantActor.h"
 #include "SurveillanceObjective.h"
@@ -135,7 +136,12 @@ void UGameplayMissionSubsystem::StartMission()
 	}
 }
 
-USurveillanceObjective* UGameplayMissionSubsystem::StartSurveillanceObjective(FName ObjectiveId, FText DisplayName, FName TargetGroupId)
+USurveillanceObjective* UGameplayMissionSubsystem::StartSurveillanceObjective(
+	FName ObjectiveId,
+	FText DisplayName,
+	FText Description,
+	FName TargetGroupId
+)
 {
 	if (TargetGroupId == NAME_None)
 	{
@@ -157,7 +163,7 @@ USurveillanceObjective* UGameplayMissionSubsystem::StartSurveillanceObjective(FN
 		return nullptr;
 	}
 
-	Objective->InitializeSurveillanceObjective(ObjectiveId, DisplayName, TargetGroupId);
+	Objective->InitializeSurveillanceObjective(ObjectiveId, DisplayName, Description, TargetGroupId);
 	Objective->OnObjectiveProgressChanged.AddDynamic(this, &UGameplayMissionSubsystem::HandleObjectiveProgressChanged);
 	Objective->OnObjectiveCompleted.AddDynamic(this, &UGameplayMissionSubsystem::HandleObjectiveCompleted);
 
@@ -170,6 +176,63 @@ USurveillanceObjective* UGameplayMissionSubsystem::StartSurveillanceObjective(FN
 		TEXT("[Mission] Started objective=%s Group=%s Required=%d"),
 		*ObjectiveId.ToString(),
 		*TargetGroupId.ToString(),
+		Objective->GetRequiredProgress()
+	);
+
+	return Objective;
+}
+
+UEventMissionObjective* UGameplayMissionSubsystem::StartEventObjective(
+	FName ObjectiveId,
+	FText DisplayName,
+	FText Description,
+	FName RequiredEventTag,
+	FName RequiredContextId,
+	int32 RequiredProgress
+)
+{
+	if (RequiredEventTag == NAME_None)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Mission] Empty event tag objective=%s"), *ObjectiveId.ToString());
+		return nullptr;
+	}
+
+	if (UMissionObjective* ExistingObjective = GetObjective(ObjectiveId))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Mission] Objective already exists=%s"), *ObjectiveId.ToString());
+		return Cast<UEventMissionObjective>(ExistingObjective);
+	}
+
+	UEventMissionObjective* Objective = NewObject<UEventMissionObjective>(this);
+
+	if (!Objective)
+	{
+		UE_LOG(LogTemp, Error, TEXT("[Mission] Failed to create event objective=%s"), *ObjectiveId.ToString());
+		return nullptr;
+	}
+
+	Objective->InitializeEventObjective(
+		ObjectiveId,
+		DisplayName,
+		Description,
+		RequiredEventTag,
+		RequiredContextId,
+		RequiredProgress
+	);
+
+	Objective->OnObjectiveProgressChanged.AddDynamic(this, &UGameplayMissionSubsystem::HandleObjectiveProgressChanged);
+	Objective->OnObjectiveCompleted.AddDynamic(this, &UGameplayMissionSubsystem::HandleObjectiveCompleted);
+
+	ActiveObjectives.Add(Objective);
+	Objective->ActivateObjective();
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[Mission] Started event objective=%s Event=%s Context=%s Required=%d"),
+		*ObjectiveId.ToString(),
+		*RequiredEventTag.ToString(),
+		*RequiredContextId.ToString(),
 		Objective->GetRequiredProgress()
 	);
 
@@ -209,6 +272,11 @@ UMissionObjective* UGameplayMissionSubsystem::GetObjective(FName ObjectiveId) co
 	}
 
 	return nullptr;
+}
+
+const TArray<UMissionObjective*>& UGameplayMissionSubsystem::GetActiveObjectives() const
+{
+	return ActiveObjectives;
 }
 
 int32 UGameplayMissionSubsystem::CountRegisteredActorsForGroup(FName GroupId) const
