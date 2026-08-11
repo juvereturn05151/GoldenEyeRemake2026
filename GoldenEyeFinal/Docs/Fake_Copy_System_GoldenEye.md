@@ -575,7 +575,7 @@ P
 Expected:
 
 ```text
-Copy started
+
 ```
 
 Progress should begin internally.
