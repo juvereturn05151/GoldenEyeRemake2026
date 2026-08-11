@@ -32,6 +32,19 @@ AGoldenEyeMissionInitializer::AGoldenEyeMissionInitializer()
 	PhotoObjective.RequiredContextId = TEXT("GoldenEyePhoto");
 	PhotoObjective.RequiredProgress = 1;
 	EventObjectives.Add(PhotoObjective);
+
+	FGoldenEyeEventObjectiveDefinition CopyObjective;
+	CopyObjective.ObjectiveId = TEXT("CopyGoldenEyeKey");
+	CopyObjective.DisplayName = NSLOCTEXT("GoldenEyeMission", "CopyGoldenEyeKey", "Copy GoldenEye Key and Leave Original");
+	CopyObjective.Description = NSLOCTEXT(
+		"GoldenEyeMission",
+		"CopyGoldenEyeKeyDescription",
+		"Use the copy device long enough to duplicate the GoldenEye key data without taking the original."
+	);
+	CopyObjective.RequiredEventTag = TEXT("Copy.Completed");
+	CopyObjective.RequiredContextId = TEXT("GoldenEyeKey");
+	CopyObjective.RequiredProgress = 1;
+	EventObjectives.Add(CopyObjective);
 }
 
 void AGoldenEyeMissionInitializer::BeginPlay()
