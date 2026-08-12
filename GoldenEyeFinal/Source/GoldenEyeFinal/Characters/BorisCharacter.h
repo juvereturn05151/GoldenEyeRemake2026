@@ -5,6 +5,7 @@
 #include "BorisCharacter.generated.h"
 
 class AJamesBondCharacter;
+class ABorisComputerActor;
 class UAnimMontage;
 class UNPCHealthComponent;
 
@@ -99,6 +100,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Mission")
 	TObjectPtr<AActor> ComputerTarget = nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Mission")
+	TObjectPtr<ABorisComputerActor> BorisComputer = nullptr;
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Boris|Mission")
 	EBorisMissionState CurrentMissionState = EBorisMissionState::Idle;
 
@@ -148,6 +152,7 @@ private:
 	void SetMissionState(EBorisMissionState NewState);
 	void SetMovementRotationMode(bool bOrientToMovement);
 	void BroadcastBorisMissionCompletedEvent();
+	ABorisComputerActor* GetBorisComputerToActivate() const;
 	bool CanDamageTriggerHurtFlow() const;
 	bool CanStartMissionProgression() const;
 	bool IsDead() const;

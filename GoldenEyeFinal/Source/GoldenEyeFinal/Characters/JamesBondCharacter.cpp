@@ -1,5 +1,6 @@
 #include "JamesBondCharacter.h"
 
+#include "../Actors/BorisComputerActor.h"
 #include "../Actors/CopyOpportunity.h"
 #include "../Actors/PhotoOpportunity.h"
 #include "../Player/BondPlayerController.h"
@@ -396,6 +397,35 @@ void AJamesBondCharacter::TryCopyInteraction()
 	CurrentCopyOpportunity->TryStartCopy();
 }
 
+void AJamesBondCharacter::SetComputerInteraction(ABorisComputerActor* ComputerActor)
+{
+	if (!ComputerActor)
+	{
+		return;
+	}
+
+	CurrentComputerInteraction = ComputerActor;
+}
+
+void AJamesBondCharacter::ClearComputerInteraction(ABorisComputerActor* ComputerActor)
+{
+	if (CurrentComputerInteraction == ComputerActor)
+	{
+		CurrentComputerInteraction = nullptr;
+	}
+}
+
+void AJamesBondCharacter::TryComputerInteraction()
+{
+	if (!CurrentComputerInteraction)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s tried computer interaction with no active computer."), *GetName());
+		return;
+	}
+
+	CurrentComputerInteraction->TryInteract(this);
+}
+
 void AJamesBondCharacter::SetPhotoOpportunity(APhotoOpportunity* PhotoOpportunity)
 {
 	if (!PhotoOpportunity)
@@ -462,6 +492,12 @@ void AJamesBondCharacter::HandleInteraction()
 	if (CurrentCopyOpportunity)
 	{
 		TryCopyInteraction();
+		return;
+	}
+
+	if (CurrentComputerInteraction)
+	{
+		TryComputerInteraction();
 		return;
 	}
 }

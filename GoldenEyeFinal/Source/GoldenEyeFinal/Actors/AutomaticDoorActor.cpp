@@ -74,6 +74,11 @@ void AAutomaticDoorActor::Tick(float DeltaSeconds)
 
 void AAutomaticDoorActor::OpenDoor()
 {
+	if (bLocked)
+	{
+		return;
+	}
+
 	TimeSinceLastUserLeft = 0.0f;
 	TargetOpenAlpha = 1.0f;
 
@@ -98,6 +103,47 @@ void AAutomaticDoorActor::CloseDoor()
 bool AAutomaticDoorActor::IsOpen() const
 {
 	return bIsOpen;
+}
+
+void AAutomaticDoorActor::SetLocked(bool bNewLocked)
+{
+	if (bLocked == bNewLocked)
+	{
+		return;
+	}
+
+	bLocked = bNewLocked;
+
+	if (bLocked)
+	{
+		OverlappingUsers.Reset();
+		CloseDoor();
+		OnDoorLocked();
+		return;
+	}
+
+	RefreshOverlappingUsersFromTrigger();
+	OnDoorUnlocked();
+
+	if (OverlappingUsers.Num() > 0)
+	{
+		OpenDoor();
+	}
+}
+
+void AAutomaticDoorActor::LockDoor()
+{
+	SetLocked(true);
+}
+
+void AAutomaticDoorActor::UnlockDoor()
+{
+	SetLocked(false);
+}
+
+bool AAutomaticDoorActor::IsLocked() const
+{
+	return bLocked;
 }
 
 void AAutomaticDoorActor::HandleTriggerBeginOverlap(
@@ -166,6 +212,15 @@ void AAutomaticDoorActor::UpdateDoorMovement(float DeltaSeconds)
 
 void AAutomaticDoorActor::RefreshDoorTarget()
 {
+	if (bLocked)
+	{
+		if (bIsOpen || TargetOpenAlpha > 0.0f)
+		{
+			CloseDoor();
+		}
+		return;
+	}
+
 	if (OverlappingUsers.Num() > 0)
 	{
 		OpenDoor();
@@ -195,9 +250,30 @@ void AAutomaticDoorActor::RemoveInvalidOverlappingUsers()
 	}
 }
 
+void AAutomaticDoorActor::RefreshOverlappingUsersFromTrigger()
+{
+	OverlappingUsers.Reset();
+
+	if (!TriggerBox)
+	{
+		return;
+	}
+
+	TArray<AActor*> OverlappingActors;
+	TriggerBox->GetOverlappingActors(OverlappingActors);
+
+	for (AActor* Actor : OverlappingActors)
+	{
+		if (CanUseDoor(Actor))
+		{
+			OverlappingUsers.Add(Actor);
+		}
+	}
+}
+
 bool AAutomaticDoorActor::CanUseDoor(AActor* Actor) const
 {
-	if (!Actor)
+	if (bLocked || !Actor)
 	{
 		return false;
 	}

@@ -164,39 +164,19 @@ void ABorisCharacter::NotifyActivateComputerFinished()
 		return;
 	}
 
-	AActor* TargetActor = ComputerTarget.Get();
+	ABorisComputerActor* ComputerToActivate = GetBorisComputerToActivate();
 
-	if (!TargetActor)
+	if (!ComputerToActivate)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("BORIS: Cannot activate computer because ComputerTarget is not assigned"));
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("BORIS: Cannot activate computer because BorisComputer is not assigned and ComputerTarget is not a BorisComputerActor")
+		);
 		return;
 	}
 
-	if (ABorisComputerActor* BorisComputer = Cast<ABorisComputerActor>(TargetActor))
-	{
-		BorisComputer->ActivateComputer();
-	}
-	else
-	{
-		static const FName ActivateFunctionName(TEXT("ActivateComputer"));
-		UFunction* ActivateFunction = TargetActor->FindFunction(ActivateFunctionName);
-
-		if (ActivateFunction)
-		{
-			TargetActor->ProcessEvent(ActivateFunction, nullptr);
-			UE_LOG(LogTemp, Log, TEXT("BORIS: Computer activated"));
-		}
-		else
-		{
-			UE_LOG(
-				LogTemp,
-				Warning,
-				TEXT("BORIS: ComputerTarget %s has no ActivateComputer function"),
-				*GetNameSafe(TargetActor)
-			);
-			return;
-		}
-	}
+	ComputerToActivate->ActivateComputer();
 
 	CompleteBorisMission();
 }
@@ -416,7 +396,7 @@ void ABorisCharacter::MoveToComputer()
 void ABorisCharacter::StartComputerActivation()
 {
 	StopMissionMovement();
-	FaceActor(ComputerTarget);
+	FaceActor(GetBorisComputerToActivate() ? static_cast<AActor*>(GetBorisComputerToActivate()) : ComputerTarget.Get());
 	SetMissionState(EBorisMissionState::ActivatingComputer);
 
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Reached Computer"));
@@ -520,11 +500,21 @@ void ABorisCharacter::BroadcastBorisMissionCompletedEvent()
 	FMissionEventData EventData;
 	EventData.EventTag = MissionCompletedEventTag;
 	EventData.Instigator = this;
-	EventData.Target = ComputerTarget;
+	EventData.Target = GetBorisComputerToActivate() ? static_cast<AActor*>(GetBorisComputerToActivate()) : ComputerTarget.Get();
 	EventData.ContextId = MissionCompletedContextId;
 	EventData.Amount = 1;
 
 	MissionSubsystem->BroadcastMissionEvent(EventData);
+}
+
+ABorisComputerActor* ABorisCharacter::GetBorisComputerToActivate() const
+{
+	if (BorisComputer)
+	{
+		return BorisComputer;
+	}
+
+	return Cast<ABorisComputerActor>(ComputerTarget);
 }
 
 bool ABorisCharacter::CanStartMissionProgression() const

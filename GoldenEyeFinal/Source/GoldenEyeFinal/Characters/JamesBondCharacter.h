@@ -23,6 +23,7 @@ class UInputMappingContext;
 class USceneComponent;
 class USkeletalMeshComponent;
 class ACopyOpportunity;
+class ABorisComputerActor;
 class APhotoOpportunity;
 
 UCLASS()
@@ -62,6 +63,15 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
 	void TryCopyInteraction();
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
+	void SetComputerInteraction(ABorisComputerActor* ComputerActor);
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
+	void ClearComputerInteraction(ABorisComputerActor* ComputerActor);
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
+	void TryComputerInteraction();
 
 	UFUNCTION(BlueprintCallable, Category = "Bond|Interactions")
 	void SetPhotoOpportunity(APhotoOpportunity* PhotoOpportunity);
@@ -141,6 +151,9 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Bond|Interactions", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<APhotoOpportunity> CurrentPhotoOpportunity;
+
+	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Bond|Interactions", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<ABorisComputerActor> CurrentComputerInteraction;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Death", meta = (AllowPrivateAccess = "true", ClampMin = "0.01"))
 	float DeathFallDuration = 1.15f;

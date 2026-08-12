@@ -45,6 +45,32 @@ AGoldenEyeMissionInitializer::AGoldenEyeMissionInitializer()
 	CopyObjective.RequiredContextId = TEXT("GoldenEyeKey");
 	CopyObjective.RequiredProgress = 1;
 	EventObjectives.Add(CopyObjective);
+
+	FGoldenEyeEventObjectiveDefinition BorisComputerObjective;
+	BorisComputerObjective.ObjectiveId = TEXT("BorisActivateMainComputer");
+	BorisComputerObjective.DisplayName = NSLOCTEXT("GoldenEyeMission", "BorisActivateMainComputer", "Have Boris Activate Main Computer");
+	BorisComputerObjective.Description = NSLOCTEXT(
+		"GoldenEyeMission",
+		"BorisActivateMainComputerDescription",
+		"Escort Boris through the sequence so he activates the main computer terminal."
+	);
+	BorisComputerObjective.RequiredEventTag = TEXT("Computer.Activated");
+	BorisComputerObjective.RequiredContextId = TEXT("MainComputer");
+	BorisComputerObjective.RequiredProgress = 1;
+	EventObjectives.Add(BorisComputerObjective);
+
+	FGoldenEyeEventObjectiveDefinition DownloadDataObjective;
+	DownloadDataObjective.ObjectiveId = TEXT("DownloadMainComputerData");
+	DownloadDataObjective.DisplayName = NSLOCTEXT("GoldenEyeMission", "DownloadMainComputerData", "Download Data From Main Computer");
+	DownloadDataObjective.Description = NSLOCTEXT(
+		"GoldenEyeMission",
+		"DownloadMainComputerDataDescription",
+		"After Boris activates the main computer, interact with the terminal to download the data."
+	);
+	DownloadDataObjective.RequiredEventTag = TEXT("Computer.DataDownloaded");
+	DownloadDataObjective.RequiredContextId = TEXT("MainComputer");
+	DownloadDataObjective.RequiredProgress = 1;
+	EventObjectives.Add(DownloadDataObjective);
 }
 
 void AGoldenEyeMissionInitializer::BeginPlay()

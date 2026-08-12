@@ -33,6 +33,18 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Door")
 	bool IsOpen() const;
 
+	UFUNCTION(BlueprintCallable, Category = "Door|Lock")
+	void SetLocked(bool bNewLocked);
+
+	UFUNCTION(BlueprintCallable, Category = "Door|Lock")
+	void LockDoor();
+
+	UFUNCTION(BlueprintCallable, Category = "Door|Lock")
+	void UnlockDoor();
+
+	UFUNCTION(BlueprintPure, Category = "Door|Lock")
+	bool IsLocked() const;
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -60,6 +72,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door|Movement")
 	bool bStartOpen = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door|Lock")
+	bool bLocked = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door|Detection")
 	FVector TriggerBoxExtent = FVector(200.0f, 200.0f, 120.0f);
 
@@ -71,6 +86,12 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Door|Events")
 	void OnDoorCloseStarted();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Door|Events")
+	void OnDoorLocked();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Door|Events")
+	void OnDoorUnlocked();
 
 private:
 	UFUNCTION()
@@ -94,6 +115,7 @@ private:
 	void UpdateDoorMovement(float DeltaSeconds);
 	void RefreshDoorTarget();
 	void RemoveInvalidOverlappingUsers();
+	void RefreshOverlappingUsersFromTrigger();
 	bool CanUseDoor(AActor* Actor) const;
 
 	FVector ClosedRelativeLocation = FVector::ZeroVector;
