@@ -21,6 +21,7 @@ namespace SWATBlackboardKeys
 	const FName HasLineOfSight(TEXT("HasLineOfSight"));
 	const FName IsDead(TEXT("IsDead"));
 	const FName IsHitReacting(TEXT("IsHitReacting"));
+	const FName IsFiring(TEXT("IsFiring"));
 	const FName DistanceToTarget(TEXT("DistanceToTarget"));
 	const FName IsTooFar(TEXT("IsTooFar"));
 	const FName IsTooClose(TEXT("IsTooClose"));
@@ -148,7 +149,14 @@ void ASWATAIController::HandleTargetPerceptionUpdated(AActor* Actor, FAIStimulus
 
 void ASWATAIController::HandleControlledSWATStateChanged()
 {
-	if (ControlledSWAT && ControlledSWAT->IsDead())
+	if (
+		ControlledSWAT &&
+		(
+			ControlledSWAT->IsDead() ||
+			ControlledSWAT->IsHitReacting() ||
+			ControlledSWAT->IsFiring()
+		)
+	)
 	{
 		StopMovement();
 	}
@@ -345,7 +353,7 @@ void ASWATAIController::SyncSWATStateBlackboard()
 
 	const bool bSWATIsDead = ControlledSWAT ? ControlledSWAT->IsDead() : false;
 	const bool bSWATIsHitReacting = ControlledSWAT ? ControlledSWAT->IsHitReacting() : false;
-	const bool bSWATIsInCombat = ControlledSWAT ? ControlledSWAT->IsInCombat() : false;
+	const bool bSWATIsFiring = ControlledSWAT ? ControlledSWAT->IsFiring() : false;
 
 	BlackboardComponent->SetValueAsBool(
 		SWATBlackboardKeys::IsDead,
@@ -355,6 +363,11 @@ void ASWATAIController::SyncSWATStateBlackboard()
 	BlackboardComponent->SetValueAsBool(
 		SWATBlackboardKeys::IsHitReacting,
 		bSWATIsHitReacting
+	);
+
+	BlackboardComponent->SetValueAsBool(
+		SWATBlackboardKeys::IsFiring,
+		bSWATIsFiring
 	);
 }
 

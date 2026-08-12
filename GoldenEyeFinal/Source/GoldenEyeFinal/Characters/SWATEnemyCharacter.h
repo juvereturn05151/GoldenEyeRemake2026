@@ -50,6 +50,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "SWAT|State")
 	bool IsInCombat() const;
 
+	UFUNCTION(BlueprintPure, Category = "SWAT|State")
+	bool IsFiring() const;
+
 	UPROPERTY(BlueprintAssignable, Category = "SWAT|State")
 	FSWATStateChangedSignature OnSWATStateChanged;
 
@@ -131,6 +134,7 @@ private:
 	);
 	bool IsHeadshotBone(FName BoneName) const;
 	void StopMovementOnDeath();
+	void StopMovementForLockedState();
 	void StopCombatOnDeath();
 	void ScheduleDeathCleanup();
 	void DisableCollisionAndDestroy();

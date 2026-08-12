@@ -25,6 +25,11 @@ ASWATEnemyCharacter::ASWATEnemyCharacter()
 		MovementComponent->bOrientRotationToMovement = false;
 		MovementComponent->bUseControllerDesiredRotation = false;
 		MovementComponent->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
+		MovementComponent->bUseRVOAvoidance = true;
+		MovementComponent->AvoidanceConsiderationRadius = 400.0f;
+		MovementComponent->AvoidanceWeight = 0.5f;
+		MovementComponent->RepulsionForce = 0.0f;
+		MovementComponent->bEnablePhysicsInteraction = false;
 	}
 }
 
@@ -39,6 +44,11 @@ void ASWATEnemyCharacter::BeginPlay()
 		MovementComponent->bOrientRotationToMovement = false;
 		MovementComponent->bUseControllerDesiredRotation = false;
 		MovementComponent->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
+		MovementComponent->bUseRVOAvoidance = true;
+		MovementComponent->AvoidanceConsiderationRadius = 400.0f;
+		MovementComponent->AvoidanceWeight = 0.5f;
+		MovementComponent->RepulsionForce = 0.0f;
+		MovementComponent->bEnablePhysicsInteraction = false;
 	}
 
 	if (HealthComponent)
@@ -93,6 +103,11 @@ bool ASWATEnemyCharacter::IsHitReacting() const
 bool ASWATEnemyCharacter::IsInCombat() const
 {
 	return bIsInCombat;
+}
+
+bool ASWATEnemyCharacter::IsFiring() const
+{
+	return bIsFiring;
 }
 
 void ASWATEnemyCharacter::SetInCombat(bool bNewIsInCombat)
@@ -150,6 +165,12 @@ void ASWATEnemyCharacter::SetFiring(bool bNewIsFiring)
 	}
 
 	bIsFiring = bNewValue;
+
+	if (bIsFiring)
+	{
+		StopMovementForLockedState();
+	}
+
 	BroadcastStateChanged();
 }
 
@@ -358,6 +379,19 @@ void ASWATEnemyCharacter::StopMovementOnDeath()
 	AController* CurrentController = GetController();
 
 	if (CurrentController)
+	{
+		CurrentController->StopMovement();
+	}
+}
+
+void ASWATEnemyCharacter::StopMovementForLockedState()
+{
+	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+	{
+		MovementComponent->StopMovementImmediately();
+	}
+
+	if (AController* CurrentController = GetController())
 	{
 		CurrentController->StopMovement();
 	}

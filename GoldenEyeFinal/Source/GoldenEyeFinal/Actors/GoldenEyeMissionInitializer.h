@@ -5,8 +5,27 @@
 #include "GoldenEyeMissionInitializer.generated.h"
 
 class AAutomaticDoorActor;
+class UMissionObjective;
 class UEnemySpawnerComponent;
 class USceneComponent;
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SevenParams(
+	FGoldenEyeMissionObjectiveUpdateSignature,
+	FName,
+	ObjectiveId,
+	FText,
+	DisplayName,
+	int32,
+	CurrentProgress,
+	int32,
+	RequiredProgress,
+	int32,
+	CompletedObjectiveCount,
+	int32,
+	TotalObjectiveCount,
+	bool,
+	bObjectiveCompleted
+);
 
 USTRUCT(BlueprintType)
 struct FGoldenEyeEventObjectiveDefinition
@@ -70,6 +89,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Mission")
 	void HandleAllObjectivesCompleted();
 
+	UFUNCTION(BlueprintPure, Category = "Mission")
+	int32 GetCompletedObjectiveCount() const;
+
+	UFUNCTION(BlueprintPure, Category = "Mission")
+	int32 GetTotalObjectiveCount() const;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mission")
 	bool bInitializeOnBeginPlay = false;
 
@@ -78,6 +103,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mission")
 	TArray<FGoldenEyeEventObjectiveDefinition> EventObjectives;
+
+	UPROPERTY(BlueprintAssignable, Category = "Mission|Updates")
+	FGoldenEyeMissionObjectiveUpdateSignature OnMissionObjectiveUpdated;
 
 protected:
 	virtual void BeginPlay() override;
@@ -100,11 +128,27 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Mission|Completion")
 	void OnAllObjectivesCompleted();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Mission|Updates")
+	void OnMissionObjectiveUpdateReported(
+		FName ObjectiveId,
+		const FText& DisplayName,
+		int32 CurrentProgress,
+		int32 RequiredProgress,
+		int32 CompletedObjectiveCount,
+		int32 TotalObjectiveCount,
+		bool bObjectiveCompleted
+	);
+
 private:
+	UFUNCTION()
+	void HandleObjectiveProgressChanged(FName ObjectiveId, int32 CurrentProgress, int32 RequiredProgress);
+
 	UFUNCTION()
 	void HandleObjectiveCompleted(FName ObjectiveId);
 
-	void BindMissionCompletionDelegate();
+	void BindMissionUpdateDelegates();
+	void ReportMissionObjectiveUpdate(FName ObjectiveId, bool bObjectiveCompleted);
+	UMissionObjective* GetObjective(FName ObjectiveId) const;
 
 	bool bAllObjectivesCompletedHandled = false;
 };

@@ -111,7 +111,7 @@ void AGoldenEyeMissionInitializer::InitializeMissionAndUI()
 		return;
 	}
 
-	BindMissionCompletionDelegate();
+	BindMissionUpdateDelegates();
 
 	for (const FGoldenEyeSurveillanceObjectiveDefinition& ObjectiveDefinition : SurveillanceObjectives)
 	{
@@ -207,6 +207,54 @@ bool AGoldenEyeMissionInitializer::AreAllObjectivesCompleted() const
 	return true;
 }
 
+int32 AGoldenEyeMissionInitializer::GetCompletedObjectiveCount() const
+{
+	const UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		return 0;
+	}
+
+	const UGameplayMissionSubsystem* MissionSubsystem = World->GetSubsystem<UGameplayMissionSubsystem>();
+
+	if (!MissionSubsystem)
+	{
+		return 0;
+	}
+
+	int32 CompletedCount = 0;
+
+	for (const UMissionObjective* Objective : MissionSubsystem->GetActiveObjectives())
+	{
+		if (Objective && Objective->GetStatus() == EObjectiveStatus::Completed)
+		{
+			++CompletedCount;
+		}
+	}
+
+	return CompletedCount;
+}
+
+int32 AGoldenEyeMissionInitializer::GetTotalObjectiveCount() const
+{
+	const UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		return 0;
+	}
+
+	const UGameplayMissionSubsystem* MissionSubsystem = World->GetSubsystem<UGameplayMissionSubsystem>();
+
+	if (!MissionSubsystem)
+	{
+		return 0;
+	}
+
+	return MissionSubsystem->GetActiveObjectives().Num();
+}
+
 void AGoldenEyeMissionInitializer::CheckAllObjectivesCompleted()
 {
 	if (bAllObjectivesCompletedHandled || !AreAllObjectivesCompleted())
@@ -251,13 +299,28 @@ void AGoldenEyeMissionInitializer::HandleAllObjectivesCompleted()
 	OnAllObjectivesCompleted();
 }
 
+void AGoldenEyeMissionInitializer::HandleObjectiveProgressChanged(FName ObjectiveId, int32 CurrentProgress, int32 RequiredProgress)
+{
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[Mission] Initializer saw objective progress=%s Progress=%d/%d"),
+		*ObjectiveId.ToString(),
+		CurrentProgress,
+		RequiredProgress
+	);
+
+	ReportMissionObjectiveUpdate(ObjectiveId, false);
+}
+
 void AGoldenEyeMissionInitializer::HandleObjectiveCompleted(FName ObjectiveId)
 {
 	UE_LOG(LogTemp, Log, TEXT("[Mission] Initializer saw objective completed=%s"), *ObjectiveId.ToString());
+	ReportMissionObjectiveUpdate(ObjectiveId, true);
 	CheckAllObjectivesCompleted();
 }
 
-void AGoldenEyeMissionInitializer::BindMissionCompletionDelegate()
+void AGoldenEyeMissionInitializer::BindMissionUpdateDelegates()
 {
 	UWorld* World = GetWorld();
 
@@ -273,6 +336,62 @@ void AGoldenEyeMissionInitializer::BindMissionCompletionDelegate()
 		return;
 	}
 
+	MissionSubsystem->OnObjectiveProgressChanged.RemoveDynamic(this, &AGoldenEyeMissionInitializer::HandleObjectiveProgressChanged);
+	MissionSubsystem->OnObjectiveProgressChanged.AddDynamic(this, &AGoldenEyeMissionInitializer::HandleObjectiveProgressChanged);
+
 	MissionSubsystem->OnObjectiveCompleted.RemoveDynamic(this, &AGoldenEyeMissionInitializer::HandleObjectiveCompleted);
 	MissionSubsystem->OnObjectiveCompleted.AddDynamic(this, &AGoldenEyeMissionInitializer::HandleObjectiveCompleted);
+}
+
+void AGoldenEyeMissionInitializer::ReportMissionObjectiveUpdate(FName ObjectiveId, bool bObjectiveCompleted)
+{
+	UMissionObjective* Objective = GetObjective(ObjectiveId);
+
+	if (!Objective)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[Mission] Cannot report update for missing objective=%s"), *ObjectiveId.ToString());
+		return;
+	}
+
+	const int32 CompletedObjectiveCount = GetCompletedObjectiveCount();
+	const int32 TotalObjectiveCount = GetTotalObjectiveCount();
+
+	OnMissionObjectiveUpdated.Broadcast(
+		ObjectiveId,
+		Objective->GetDisplayName(),
+		Objective->GetCurrentProgress(),
+		Objective->GetRequiredProgress(),
+		CompletedObjectiveCount,
+		TotalObjectiveCount,
+		bObjectiveCompleted
+	);
+
+	OnMissionObjectiveUpdateReported(
+		ObjectiveId,
+		Objective->GetDisplayName(),
+		Objective->GetCurrentProgress(),
+		Objective->GetRequiredProgress(),
+		CompletedObjectiveCount,
+		TotalObjectiveCount,
+		bObjectiveCompleted
+	);
+}
+
+UMissionObjective* AGoldenEyeMissionInitializer::GetObjective(FName ObjectiveId) const
+{
+	const UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		return nullptr;
+	}
+
+	const UGameplayMissionSubsystem* MissionSubsystem = World->GetSubsystem<UGameplayMissionSubsystem>();
+
+	if (!MissionSubsystem)
+	{
+		return nullptr;
+	}
+
+	return MissionSubsystem->GetObjective(ObjectiveId);
 }
