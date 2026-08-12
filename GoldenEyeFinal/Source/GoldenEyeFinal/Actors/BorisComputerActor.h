@@ -7,6 +7,7 @@
 class AJamesBondCharacter;
 class UBoxComponent;
 class USceneComponent;
+class USoundBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBorisComputerActivatedSignature, class ABorisComputerActor*, Computer);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FBorisComputerInteractionSignature, class ABorisComputerActor*, Computer);
@@ -64,6 +65,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Computer|Interaction")
 	FText InteractionPromptText = FText::FromString(TEXT("Use Computer"));
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Computer|Sound")
+	TObjectPtr<USoundBase> PlayerActivateCompleteSound;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Mission Event")
 	bool bBroadcastMissionEventOnActivated = true;
 
@@ -110,6 +114,7 @@ private:
 	void SetBondInteractionAvailable(AJamesBondCharacter* Bond, bool bAvailable);
 	void BroadcastActivationMissionEvent();
 	void BroadcastInteractionMissionEvent(AJamesBondCharacter* Bond);
+	void PlayComputerSound(USoundBase* Sound) const;
 
 	UPROPERTY()
 	TObjectPtr<AJamesBondCharacter> OverlappingBond;

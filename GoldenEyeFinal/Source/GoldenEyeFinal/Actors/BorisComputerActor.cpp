@@ -6,6 +6,8 @@
 #include "../Player/BondPlayerController.h"
 #include "Components/BoxComponent.h"
 #include "Components/SceneComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 
 ABorisComputerActor::ABorisComputerActor()
 {
@@ -92,6 +94,7 @@ bool ABorisComputerActor::TryInteract(AJamesBondCharacter* Bond)
 	bInteractionCompleted = true;
 
 	UE_LOG(LogTemp, Log, TEXT("%s computer interacted by Bond."), *GetName());
+	PlayComputerSound(PlayerActivateCompleteSound);
 	OnComputerInteracted.Broadcast(this);
 	BroadcastInteractionMissionEvent(Bond);
 
@@ -273,4 +276,14 @@ void ABorisComputerActor::SetBondInteractionAvailable(AJamesBondCharacter* Bond,
 	{
 		BondController->HideInteractionPrompt();
 	}
+}
+
+void ABorisComputerActor::PlayComputerSound(USoundBase* Sound) const
+{
+	if (!Sound)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation());
 }

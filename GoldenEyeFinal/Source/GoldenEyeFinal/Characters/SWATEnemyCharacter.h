@@ -14,6 +14,7 @@ E-mail: juvereturn@gmail.com
 class UNPCHealthComponent;
 class USWATCombatComponent;
 class USWATWeaponComponent;
+class USoundBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FSWATStateChangedSignature);
 
@@ -71,6 +72,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "SWAT|Combat")
 	void ConfirmFireProjectileFromAnimation();
 
+	UFUNCTION(BlueprintCallable, Category = "SWAT|Sound")
+	void PlayISeeBondSound();
+
+	UFUNCTION(BlueprintCallable, Category = "SWAT|Sound")
+	void PlayIHeardSomethingSound();
+
 	UFUNCTION(BlueprintImplementableEvent, Category = "SWAT|Animation")
 	void OnSWATFireAnimationRequested();
 
@@ -101,6 +108,18 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "SWAT|State", meta = (ClampMin = "0.0"))
 	float DeathDestroyDelay = 4.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SWAT|Sound")
+	TObjectPtr<USoundBase> HitSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SWAT|Sound")
+	TObjectPtr<USoundBase> DieSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SWAT|Sound")
+	TObjectPtr<USoundBase> ISeeBondSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SWAT|Sound")
+	TObjectPtr<USoundBase> IHeardSomethingSound;
 
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|State")
 	bool bIsDead = false;
@@ -145,6 +164,7 @@ private:
 	void LockMovementForHitReaction();
 	void RestoreMovementAfterHitReaction();
 	void BroadcastStateChanged();
+	void PlaySoundAtSWATLocation(USoundBase* Sound) const;
 
 	bool bIsHitReactionOnCooldown = false;
 	TEnumAsByte<EMovementMode> PreviousMovementMode = MOVE_Walking;

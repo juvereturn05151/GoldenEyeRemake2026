@@ -216,6 +216,8 @@ void ASWATAIController::HandleSightStimulus(AActor* Actor, const FAIStimulus& St
 
 	if (Stimulus.WasSuccessfullySensed())
 	{
+		const bool bWasAlreadySeeingBond = TargetActor == Actor && bHasLineOfSight;
+
 		TargetActor = Actor;
 		bHasLineOfSight = true;
 		SetFocus(TargetActor, EAIFocusPriority::Gameplay);
@@ -224,6 +226,11 @@ void ASWATAIController::HandleSightStimulus(AActor* Actor, const FAIStimulus& St
 		{
 			ControlledSWAT->SetInCombat(true);
 			ControlledSWAT->SetHasLineOfSight(true);
+
+			if (!bWasAlreadySeeingBond)
+			{
+				ControlledSWAT->PlayISeeBondSound();
+			}
 		}
 		return;
 	}
@@ -246,6 +253,11 @@ void ASWATAIController::HandleHearingStimulus(AActor* Actor, const FAIStimulus& 
 
 	LastHeardLocation = Stimulus.StimulusLocation;
 	bHasValidLastHeardLocation = true;
+
+	if (ControlledSWAT)
+	{
+		ControlledSWAT->PlayIHeardSomethingSound();
+	}
 
 #if ENABLE_DRAW_DEBUG
 	if (bDebugPerception)

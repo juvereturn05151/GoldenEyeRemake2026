@@ -3,8 +3,11 @@
 #include "../Characters/JamesBondCharacter.h"
 #include "../Mission/GameplayMissionSubsystem.h"
 #include "../Mission/MissionTypes.h"
+#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 #include "TimerManager.h"
 
 ACopyOpportunity::ACopyOpportunity()
@@ -20,6 +23,10 @@ ACopyOpportunity::ACopyOpportunity()
 	TriggerBox->SetCollisionResponseToAllChannels(ECR_Ignore);
 	TriggerBox->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 	TriggerBox->SetGenerateOverlapEvents(true);
+
+	CopyingAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("CopyingAudioComponent"));
+	CopyingAudioComponent->SetupAttachment(TriggerBox);
+	CopyingAudioComponent->bAutoActivate = false;
 }
 
 void ACopyOpportunity::BeginPlay()
@@ -43,6 +50,7 @@ void ACopyOpportunity::BeginPlay()
 void ACopyOpportunity::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	ClearCopyTimer();
+	StopCopyingSound();
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -96,6 +104,8 @@ void ACopyOpportunity::TryStartCopy()
 	NextProgressLogMilestone = 0.25f;
 
 	UE_LOG(LogTemp, Log, TEXT("%s copy started."), *GetName());
+	PlayCopySound(CopyDataSound);
+	StartCopyingSound();
 
 	OnCopyProgressChanged.Broadcast(CurrentCopyProgress);
 	OnCopyStarted.Broadcast();
@@ -226,6 +236,7 @@ void ACopyOpportunity::CompleteCopy()
 	}
 
 	ClearCopyTimer();
+	StopCopyingSound();
 
 	CurrentCopyProgress = 1.0f;
 	bCopyInProgress = false;
@@ -234,6 +245,7 @@ void ACopyOpportunity::CompleteCopy()
 	OnCopyProgressChanged.Broadcast(1.0f);
 
 	UE_LOG(LogTemp, Log, TEXT("%s copy completed."), *GetName());
+	PlayCopySound(CopyCompletedSound);
 	OnCopyCompleted.Broadcast();
 	BroadcastCopyMissionEvent();
 }
@@ -246,6 +258,7 @@ void ACopyOpportunity::CancelCopy()
 	}
 
 	ClearCopyTimer();
+	StopCopyingSound();
 
 	CurrentCopyProgress = 0.0f;
 	CopyElapsedTime = 0.0f;
@@ -263,6 +276,35 @@ void ACopyOpportunity::ClearCopyTimer()
 	if (UWorld* World = GetWorld())
 	{
 		World->GetTimerManager().ClearTimer(CopyProgressTimer);
+	}
+}
+
+void ACopyOpportunity::PlayCopySound(USoundBase* Sound) const
+{
+	if (!Sound)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation());
+}
+
+void ACopyOpportunity::StartCopyingSound()
+{
+	if (!CopyingAudioComponent || !CopyingSound)
+	{
+		return;
+	}
+
+	CopyingAudioComponent->SetSound(CopyingSound);
+	CopyingAudioComponent->Play();
+}
+
+void ACopyOpportunity::StopCopyingSound()
+{
+	if (CopyingAudioComponent && CopyingAudioComponent->IsPlaying())
+	{
+		CopyingAudioComponent->Stop();
 	}
 }
 

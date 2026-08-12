@@ -16,6 +16,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
 #include "InputCoreTypes.h"
+#include "Sound/SoundBase.h"
 #include "../Components/BondFootstepComponent.h"
 #include "../Components/BondHealthComponent.h"
 #include "../Components/BondTimeSlowComponent.h"
@@ -565,6 +566,12 @@ void AJamesBondCharacter::InitializeInputMapping()
 
 void AJamesBondCharacter::HandleDeath()
 {
+	if (BondAudioComponent && DieSound)
+	{
+		BondAudioComponent->SetSound(DieSound);
+		BondAudioComponent->Play();
+	}
+
 	StartDeathFall();
 }
 

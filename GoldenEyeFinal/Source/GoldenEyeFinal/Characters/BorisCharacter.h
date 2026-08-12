@@ -7,7 +7,9 @@
 class AJamesBondCharacter;
 class ABorisComputerActor;
 class UAnimMontage;
+class UAudioComponent;
 class UNPCHealthComponent;
+class USoundBase;
 
 UENUM(BlueprintType)
 enum class EBorisMissionState : uint8
@@ -94,6 +96,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boris|Components")
 	TObjectPtr<UNPCHealthComponent> HealthComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Boris|Components")
+	TObjectPtr<UAudioComponent> WalkingHumAudioComponent;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Mission")
 	TObjectPtr<AActor> PointA = nullptr;
 
@@ -124,6 +129,24 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Animation")
 	TObjectPtr<UAnimMontage> DeathMontage = nullptr;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Sound")
+	TObjectPtr<USoundBase> IAmScaredSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Sound")
+	TObjectPtr<USoundBase> HumWhileWalkingSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Sound")
+	TObjectPtr<USoundBase> AnnoyingLineSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Sound")
+	TObjectPtr<USoundBase> HurtSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Sound")
+	TObjectPtr<USoundBase> ActivatingSound = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Sound")
+	TObjectPtr<USoundBase> ActivateCompleteSound = nullptr;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Boris|Mission Event")
 	bool bBroadcastMissionEventOnCompletion = true;
 
@@ -149,6 +172,9 @@ private:
 	void CompleteBorisMission();
 	void StopMissionMovement();
 	void StopCurrentMontageImmediately();
+	void PlayBorisSound(USoundBase* Sound) const;
+	void StartWalkingHum();
+	void StopWalkingHum();
 	void FaceActor(AActor* TargetActor);
 	void SetMissionState(EBorisMissionState NewState);
 	void SetMovementRotationMode(bool bOrientToMovement);

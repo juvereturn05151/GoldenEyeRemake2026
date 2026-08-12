@@ -8,6 +8,8 @@
 #include "Engine/DamageEvents.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 #include "TimerManager.h"
 
 ASWATEnemyCharacter::ASWATEnemyCharacter()
@@ -200,6 +202,16 @@ void ASWATEnemyCharacter::ConfirmFireProjectileFromAnimation()
 	CombatComponent->ConfirmFireProjectileFromAnimation();
 }
 
+void ASWATEnemyCharacter::PlayISeeBondSound()
+{
+	PlaySoundAtSWATLocation(ISeeBondSound);
+}
+
+void ASWATEnemyCharacter::PlayIHeardSomethingSound()
+{
+	PlaySoundAtSWATLocation(IHeardSomethingSound);
+}
+
 float ASWATEnemyCharacter::TakeDamage(
 	float DamageAmount,
 	FDamageEvent const& DamageEvent,
@@ -287,6 +299,7 @@ void ASWATEnemyCharacter::HandleDeath()
 	StopMovementOnDeath();
 	StopCombatOnDeath();
 	DisablePawnCollisionOnDeath();
+	PlaySoundAtSWATLocation(DieSound);
 	BroadcastStateChanged();
 	OnSWATDeath();
 	ScheduleDeathCleanup();
@@ -307,6 +320,7 @@ void ASWATEnemyCharacter::HandleDamageTaken(float DamageAmount)
 	}
 
 	LockMovementForHitReaction();
+	PlaySoundAtSWATLocation(HitSound);
 	OnSWATHitReaction(DamageAmount);
 
 	UWorld* World = GetWorld();
@@ -560,4 +574,14 @@ void ASWATEnemyCharacter::StopCurrentMontageImmediately()
 void ASWATEnemyCharacter::BroadcastStateChanged()
 {
 	OnSWATStateChanged.Broadcast();
+}
+
+void ASWATEnemyCharacter::PlaySoundAtSWATLocation(USoundBase* Sound) const
+{
+	if (!Sound)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation());
 }

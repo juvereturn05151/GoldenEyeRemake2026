@@ -22,6 +22,7 @@ class UInputComponent;
 class UInputMappingContext;
 class USceneComponent;
 class USkeletalMeshComponent;
+class USoundBase;
 class ACopyOpportunity;
 class ABorisComputerActor;
 class APhotoOpportunity;
@@ -163,6 +164,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Death", meta = (AllowPrivateAccess = "true"))
 	FRotator DeathCameraRotationOffset = FRotator(-68.0f, 0.0f, 18.0f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Bond|Sound", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USoundBase> DieSound;
 
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);

@@ -11,7 +11,9 @@ E-mail: juvereturn@gmail.com
 #include "CopyOpportunity.generated.h"
 
 class AJamesBondCharacter;
+class UAudioComponent;
 class UBoxComponent;
+class USoundBase;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCopyOpportunityEvent);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FCopyProgressChangedEvent, float, Progress);
@@ -42,8 +44,20 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Copy Opportunity")
 	TObjectPtr<UBoxComponent> TriggerBox;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Copy Opportunity|Sound")
+	TObjectPtr<UAudioComponent> CopyingAudioComponent;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Copy Opportunity", meta = (ClampMin = "0.01"))
 	float CopyDuration = 3.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Copy Opportunity|Sound")
+	TObjectPtr<USoundBase> CopyDataSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Copy Opportunity|Sound")
+	TObjectPtr<USoundBase> CopyingSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Copy Opportunity|Sound")
+	TObjectPtr<USoundBase> CopyCompletedSound;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Copy Opportunity")
 	float CurrentCopyProgress = 0.0f;
@@ -119,4 +133,7 @@ private:
 	void CancelCopy();
 	void ClearCopyTimer();
 	void BroadcastCopyMissionEvent();
+	void PlayCopySound(USoundBase* Sound) const;
+	void StartCopyingSound();
+	void StopCopyingSound();
 };

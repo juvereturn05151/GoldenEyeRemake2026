@@ -8,9 +8,12 @@
 #include "AIController.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
+#include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 #include "TimerManager.h"
 
 namespace
@@ -52,6 +55,10 @@ ABorisCharacter::ABorisCharacter()
 
 	HealthComponent = CreateDefaultSubobject<UNPCHealthComponent>(TEXT("HealthComponent"));
 
+	WalkingHumAudioComponent = CreateDefaultSubobject<UAudioComponent>(TEXT("WalkingHumAudioComponent"));
+	WalkingHumAudioComponent->SetupAttachment(GetRootComponent());
+	WalkingHumAudioComponent->bAutoActivate = false;
+
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
 	{
 		Capsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
@@ -87,6 +94,7 @@ void ABorisCharacter::BeginPlay()
 void ABorisCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	StopMoveArrivalCheck();
+	StopWalkingHum();
 
 	Super::EndPlay(EndPlayReason);
 }
@@ -132,6 +140,7 @@ void ABorisCharacter::NotifyPlayerDetected(AJamesBondCharacter* DetectedBond)
 	}
 
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Player detected"));
+	PlayBorisSound(IAmScaredSound);
 	OnBorisSawPlayer.Broadcast(this);
 	StartHandsUp();
 }
@@ -178,6 +187,7 @@ void ABorisCharacter::NotifyActivateComputerFinished()
 	}
 
 	ComputerToActivate->ActivateComputer();
+	PlayBorisSound(ActivateCompleteSound);
 
 	CompleteBorisMission();
 }
@@ -274,6 +284,7 @@ void ABorisCharacter::HandleDeath()
 
 	bDeathHandled = true;
 	StopMissionMovement();
+	StopWalkingHum();
 	SetMissionState(EBorisMissionState::Dead);
 
 	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
@@ -329,6 +340,7 @@ void ABorisCharacter::MoveToPointA()
 	StopCurrentMontageImmediately();
 	SetMissionState(EBorisMissionState::MovingToPointA);
 	SetMovementRotationMode(true);
+	StartWalkingHum();
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Moving to Point A"));
 	AIController->MoveToActor(PointA, MoveAcceptanceRadius, true, true, true);
 	StartMoveArrivalCheck();
@@ -343,6 +355,7 @@ void ABorisCharacter::EnterWaitingAtPointA()
 	OnReachedPointA.Broadcast(this);
 
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Waiting to be provoked"));
+	PlayBorisSound(AnnoyingLineSound);
 }
 
 void ABorisCharacter::StartHurtReaction()
@@ -351,6 +364,7 @@ void ABorisCharacter::StartHurtReaction()
 	SetMissionState(EBorisMissionState::HurtReacting);
 
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Hurt reaction started"));
+	PlayBorisSound(HurtSound);
 	OnBorisProvoked.Broadcast(this);
 
 	if (HurtMontage)
@@ -391,6 +405,7 @@ void ABorisCharacter::MoveToComputer()
 	StopCurrentMontageImmediately();
 	SetMissionState(EBorisMissionState::MovingToComputer);
 	SetMovementRotationMode(true);
+	StartWalkingHum();
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Moving to Computer"));
 	AIController->MoveToActor(ComputerTarget, MoveAcceptanceRadius, true, true, true);
 	StartMoveArrivalCheck();
@@ -406,6 +421,7 @@ void ABorisCharacter::StartComputerActivation()
 	OnReachedComputer.Broadcast(this);
 
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Activation animation started"));
+	PlayBorisSound(ActivatingSound);
 	OnComputerActivationStarted.Broadcast(this);
 
 	if (ActivateComputerMontage)
@@ -432,6 +448,7 @@ void ABorisCharacter::CompleteBorisMission()
 void ABorisCharacter::StopMissionMovement()
 {
 	StopMoveArrivalCheck();
+	StopWalkingHum();
 	SetMovementRotationMode(false);
 
 	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
@@ -462,6 +479,40 @@ void ABorisCharacter::StopCurrentMontageImmediately()
 	}
 
 	AnimInstance->Montage_Stop(0.0f);
+}
+
+void ABorisCharacter::PlayBorisSound(USoundBase* Sound) const
+{
+	if (!Sound)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation());
+}
+
+void ABorisCharacter::StartWalkingHum()
+{
+	if (!WalkingHumAudioComponent || !HumWhileWalkingSound)
+	{
+		return;
+	}
+
+	if (WalkingHumAudioComponent->IsPlaying())
+	{
+		return;
+	}
+
+	WalkingHumAudioComponent->SetSound(HumWhileWalkingSound);
+	WalkingHumAudioComponent->Play();
+}
+
+void ABorisCharacter::StopWalkingHum()
+{
+	if (WalkingHumAudioComponent && WalkingHumAudioComponent->IsPlaying())
+	{
+		WalkingHumAudioComponent->Stop();
+	}
 }
 
 void ABorisCharacter::FaceActor(AActor* TargetActor)
