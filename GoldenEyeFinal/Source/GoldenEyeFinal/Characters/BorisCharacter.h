@@ -148,6 +148,7 @@ private:
 	void StartComputerActivation();
 	void CompleteBorisMission();
 	void StopMissionMovement();
+	void StopCurrentMontageImmediately();
 	void FaceActor(AActor* TargetActor);
 	void SetMissionState(EBorisMissionState NewState);
 	void SetMovementRotationMode(bool bOrientToMovement);

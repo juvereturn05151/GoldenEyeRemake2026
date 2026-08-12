@@ -3,6 +3,7 @@
 #include "../Components/NPCHealthComponent.h"
 #include "../Components/SWATCombatComponent.h"
 #include "../Components/SWATWeaponComponent.h"
+#include "Animation/AnimInstance.h"
 #include "Components/PrimitiveComponent.h"
 #include "Engine/DamageEvents.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -285,6 +286,7 @@ void ASWATEnemyCharacter::HandleDeath()
 
 	StopMovementOnDeath();
 	StopCombatOnDeath();
+	DisablePawnCollisionOnDeath();
 	BroadcastStateChanged();
 	OnSWATDeath();
 	ScheduleDeathCleanup();
@@ -415,6 +417,25 @@ void ASWATEnemyCharacter::StopCombatOnDeath()
 	bIsFiring = false;
 }
 
+void ASWATEnemyCharacter::DisablePawnCollisionOnDeath()
+{
+	TArray<UPrimitiveComponent*> PrimitiveComponents;
+	GetComponents<UPrimitiveComponent>(PrimitiveComponents);
+
+	for (UPrimitiveComponent* PrimitiveComponent : PrimitiveComponents)
+	{
+		if (!PrimitiveComponent)
+		{
+			continue;
+		}
+
+		PrimitiveComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
+		PrimitiveComponent->SetGenerateOverlapEvents(false);
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("[SWAT Death] Disabled Pawn collision for dead SWAT=%s"), *GetName());
+}
+
 void ASWATEnemyCharacter::ScheduleDeathCleanup()
 {
 	UWorld* World = GetWorld();
@@ -502,6 +523,7 @@ void ASWATEnemyCharacter::RestoreMovementAfterHitReaction()
 		return;
 	}
 
+	StopCurrentMontageImmediately();
 	bIsHitReacting = false;
 	BroadcastStateChanged();
 
@@ -514,6 +536,25 @@ void ASWATEnemyCharacter::RestoreMovementAfterHitReaction()
 			PreviousCustomMovementMode
 		);
 	}
+}
+
+void ASWATEnemyCharacter::StopCurrentMontageImmediately()
+{
+	USkeletalMeshComponent* MeshComponent = GetMesh();
+
+	if (!MeshComponent)
+	{
+		return;
+	}
+
+	UAnimInstance* AnimInstance = MeshComponent->GetAnimInstance();
+
+	if (!AnimInstance)
+	{
+		return;
+	}
+
+	AnimInstance->Montage_Stop(0.0f);
 }
 
 void ASWATEnemyCharacter::BroadcastStateChanged()

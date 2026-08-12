@@ -6,6 +6,7 @@
 #include "../Mission/GameplayMissionSubsystem.h"
 #include "../Mission/MissionTypes.h"
 #include "AIController.h"
+#include "Animation/AnimInstance.h"
 #include "Animation/AnimMontage.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
@@ -325,6 +326,7 @@ void ABorisCharacter::MoveToPointA()
 		return;
 	}
 
+	StopCurrentMontageImmediately();
 	SetMissionState(EBorisMissionState::MovingToPointA);
 	SetMovementRotationMode(true);
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Moving to Point A"));
@@ -386,6 +388,7 @@ void ABorisCharacter::MoveToComputer()
 		return;
 	}
 
+	StopCurrentMontageImmediately();
 	SetMissionState(EBorisMissionState::MovingToComputer);
 	SetMovementRotationMode(true);
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Moving to Computer"));
@@ -440,6 +443,25 @@ void ABorisCharacter::StopMissionMovement()
 	{
 		CurrentController->StopMovement();
 	}
+}
+
+void ABorisCharacter::StopCurrentMontageImmediately()
+{
+	USkeletalMeshComponent* MeshComponent = GetMesh();
+
+	if (!MeshComponent)
+	{
+		return;
+	}
+
+	UAnimInstance* AnimInstance = MeshComponent->GetAnimInstance();
+
+	if (!AnimInstance)
+	{
+		return;
+	}
+
+	AnimInstance->Montage_Stop(0.0f);
 }
 
 void ABorisCharacter::FaceActor(AActor* TargetActor)

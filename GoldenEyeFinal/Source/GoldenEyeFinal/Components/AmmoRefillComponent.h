@@ -11,6 +11,7 @@ E-mail: juvereturn@gmail.com
 #include "AmmoRefillComponent.generated.h"
 
 class UPrimitiveComponent;
+class USoundBase;
 
 UCLASS(ClassGroup = (Pickup), meta = (BlueprintSpawnableComponent))
 class GOLDENEYEFINAL_API UAmmoRefillComponent : public UActorComponent
@@ -37,6 +38,12 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pickup|Ammo", meta = (AllowPrivateAccess = "true"))
 	bool bDisableAfterPickup = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pickup|Ammo|Audio", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USoundBase> PickupSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pickup|Ammo|Audio", meta = (AllowPrivateAccess = "true", ClampMin = "0.0"))
+	float PickupSoundVolumeMultiplier = 1.0f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Pickup|Ammo", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UPrimitiveComponent> OverlapComponent;
 
@@ -54,5 +61,6 @@ private:
 	);
 
 	UPrimitiveComponent* ResolveOverlapComponent() const;
+	void PlayPickupSound() const;
 	void CompletePickup();
 };

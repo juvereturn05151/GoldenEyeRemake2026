@@ -4,6 +4,7 @@
 #include "../Components/BondWeaponComponent.h"
 #include "../Weapons/BondWeaponBase.h"
 #include "Components/PrimitiveComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 UAmmoRefillComponent::UAmmoRefillComponent()
 {
@@ -94,6 +95,7 @@ bool UAmmoRefillComponent::TryRefillAmmo(AActor* PickupActor)
 		AmmoAmount
 	);
 
+	PlayPickupSound();
 	CompletePickup();
 	return true;
 }
@@ -131,6 +133,28 @@ UPrimitiveComponent* UAmmoRefillComponent::ResolveOverlapComponent() const
 	}
 
 	return OwnerActor->FindComponentByClass<UPrimitiveComponent>();
+}
+
+void UAmmoRefillComponent::PlayPickupSound() const
+{
+	if (!PickupSound)
+	{
+		return;
+	}
+
+	const AActor* OwnerActor = GetOwner();
+
+	if (!OwnerActor)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(
+		OwnerActor,
+		PickupSound,
+		OwnerActor->GetActorLocation(),
+		PickupSoundVolumeMultiplier
+	);
 }
 
 void UAmmoRefillComponent::CompletePickup()

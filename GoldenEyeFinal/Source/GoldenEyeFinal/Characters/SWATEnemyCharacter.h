@@ -136,6 +136,8 @@ private:
 	void StopMovementOnDeath();
 	void StopMovementForLockedState();
 	void StopCombatOnDeath();
+	void DisablePawnCollisionOnDeath();
+	void StopCurrentMontageImmediately();
 	void ScheduleDeathCleanup();
 	void DisableCollisionAndDestroy();
 	void DisableAllCollision();
