@@ -9,6 +9,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
 #include "Sound/SoundBase.h"
 #include "TimerManager.h"
 
@@ -234,6 +235,7 @@ float ASWATEnemyCharacter::TakeDamage(
 
 		BoneName = PointDamageEvent->HitInfo.BoneName;
 		HitComponent = PointDamageEvent->HitInfo.GetComponent();
+		SpawnBloodParticleAtHit(PointDamageEvent->HitInfo);
 	}
 
 	ApplySWATDamage(DamageAmount, BoneName, HitComponent);
@@ -584,4 +586,31 @@ void ASWATEnemyCharacter::PlaySoundAtSWATLocation(USoundBase* Sound) const
 	}
 
 	UGameplayStatics::PlaySoundAtLocation(this, Sound, GetActorLocation());
+}
+
+void ASWATEnemyCharacter::SpawnBloodParticleAtHit(const FHitResult& HitResult) const
+{
+	if (!BloodParticleTemplate)
+	{
+		return;
+	}
+
+	const FVector SpawnLocation = HitResult.ImpactPoint.IsNearlyZero()
+		? FVector(HitResult.Location)
+		: FVector(HitResult.ImpactPoint);
+
+	const FVector Direction = HitResult.ImpactNormal.IsNearlyZero()
+		? -GetActorForwardVector()
+		: FVector(HitResult.ImpactNormal);
+
+	const FRotator SpawnRotation = Direction.Rotation();
+
+	UGameplayStatics::SpawnEmitterAtLocation(
+		this,
+		BloodParticleTemplate,
+		SpawnLocation,
+		SpawnRotation,
+		BloodParticleScale,
+		true
+	);
 }

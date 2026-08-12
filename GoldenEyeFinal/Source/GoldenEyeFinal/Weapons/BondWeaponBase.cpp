@@ -300,11 +300,15 @@ void ABondWeaponBase::FireOnce()
 
 	}
 
-	if (ImpactEffect)
+	UParticleSystem* EffectToSpawn = bHit
+		? GetImpactEffectForHit(Hit)
+		: nullptr;
+
+	if (EffectToSpawn)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(
 			World,
-			ImpactEffect,
+			EffectToSpawn,
 			Hit.ImpactPoint,
 			Hit.ImpactNormal.Rotation()
 		);
@@ -356,6 +360,21 @@ void ABondWeaponBase::PlayFirstPersonMontage(UAnimMontage* MontageToPlay) const
 	{
 		AnimInstance->Montage_Play(MontageToPlay);
 	}
+}
+
+UParticleSystem* ABondWeaponBase::GetImpactEffectForHit(const FHitResult& Hit) const
+{
+	if (
+		bUseCharacterImpactEffectForPawnHits &&
+		CharacterImpactEffect &&
+		Hit.GetActor() &&
+		Hit.GetActor()->IsA<APawn>()
+	)
+	{
+		return CharacterImpactEffect;
+	}
+
+	return ImpactEffect;
 }
 
 FVector ABondWeaponBase::GetTraceStart() const

@@ -1,6 +1,8 @@
 #include "SurveillanceMissionComponent.h"
 
 #include "../Mission/GameplayMissionSubsystem.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 
 USurveillanceMissionComponent::USurveillanceMissionComponent()
 {
@@ -131,6 +133,7 @@ void USurveillanceMissionComponent::NotifyCameraDestroyed(AActor* EventInstigato
 	}
 
 	bAlreadyDestroyed = true;
+	PlayExplosionSound();
 
 	if (!bIsRegistered)
 	{
@@ -170,6 +173,23 @@ void USurveillanceMissionComponent::NotifyCameraDestroyed(AActor* EventInstigato
 	);
 
 	MissionSubsystem->BroadcastMissionEvent(EventData);
+}
+
+void USurveillanceMissionComponent::PlayExplosionSound() const
+{
+	AActor* OwnerActor = GetOwner();
+
+	if (!OwnerActor || !ExplosionSound)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(
+		OwnerActor,
+		ExplosionSound,
+		OwnerActor->GetActorLocation(),
+		ExplosionSoundVolume
+	);
 }
 
 bool USurveillanceMissionComponent::IsAlreadyDestroyed() const

@@ -5,6 +5,8 @@
 #include "../Mission/MissionRelevantActor.h"
 #include "SurveillanceMissionComponent.generated.h"
 
+class USoundBase;
+
 UCLASS(ClassGroup = (Mission), meta = (BlueprintSpawnableComponent))
 class GOLDENEYEFINAL_API USurveillanceMissionComponent : public UActorComponent, public IMissionRelevantActor
 {
@@ -38,11 +40,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mission|Surveillance")
 	bool bRegisterOnBeginPlay = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mission|Surveillance|Sound")
+	TObjectPtr<USoundBase> ExplosionSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mission|Surveillance|Sound", meta = (ClampMin = "0.0"))
+	float ExplosionSoundVolume = 1.0f;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 private:
+	void PlayExplosionSound() const;
+
 	bool bIsRegistered = false;
 	bool bAlreadyDestroyed = false;
 };

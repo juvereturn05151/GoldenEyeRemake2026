@@ -84,6 +84,11 @@ void AJojoBook::HandleTriggerBeginOverlap(
 	);
 
 	ResolvedMusicManager->FadeToMusic(JojoSong, JojoMusicState, FadeTime);
+
+	if (bDestroyAfterMusicTriggered)
+	{
+		Destroy();
+	}
 }
 
 ABackgroundMusicManager* AJojoBook::ResolveMusicManager() const

@@ -49,6 +49,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Jojo Book|Music")
 	bool bTriggerOnlyOnce = true;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Jojo Book|Music")
+	bool bDestroyAfterMusicTriggered = true;
+
 private:
 	UFUNCTION()
 	void HandleTriggerBeginOverlap(

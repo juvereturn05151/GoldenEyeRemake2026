@@ -12,6 +12,7 @@ E-mail: juvereturn@gmail.com
 
 class UBoxComponent;
 class USceneComponent;
+class USoundBase;
 class UStaticMeshComponent;
 
 UCLASS()
@@ -78,6 +79,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door|Detection")
 	FVector TriggerBoxExtent = FVector(200.0f, 200.0f, 120.0f);
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door|Sound")
+	TObjectPtr<USoundBase> OpenSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Door|Sound", meta = (ClampMin = "0.0"))
+	float OpenSoundVolume = 1.0f;
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "Door|State")
 	bool bIsOpen = false;
 
@@ -117,6 +124,7 @@ private:
 	void RemoveInvalidOverlappingUsers();
 	void RefreshOverlappingUsersFromTrigger();
 	bool CanUseDoor(AActor* Actor) const;
+	void PlayOpenSound() const;
 
 	FVector ClosedRelativeLocation = FVector::ZeroVector;
 	FVector OpenRelativeLocation = FVector::ZeroVector;

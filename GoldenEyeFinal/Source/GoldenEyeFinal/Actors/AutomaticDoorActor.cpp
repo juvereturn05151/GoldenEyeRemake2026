@@ -6,6 +6,8 @@
 #include "Components/BoxComponent.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundBase.h"
 
 AAutomaticDoorActor::AAutomaticDoorActor()
 {
@@ -85,6 +87,7 @@ void AAutomaticDoorActor::OpenDoor()
 	if (!bIsOpen)
 	{
 		bIsOpen = true;
+		PlayOpenSound();
 		OnDoorOpenStarted();
 	}
 }
@@ -293,4 +296,19 @@ bool AAutomaticDoorActor::CanUseDoor(AActor* Actor) const
 	const ABorisCharacter* BorisCharacter = Cast<ABorisCharacter>(Actor);
 
 	return BorisCharacter && BorisCharacter->GetCurrentMissionState() != EBorisMissionState::Dead;
+}
+
+void AAutomaticDoorActor::PlayOpenSound() const
+{
+	if (!OpenSound)
+	{
+		return;
+	}
+
+	UGameplayStatics::PlaySoundAtLocation(
+		this,
+		OpenSound,
+		GetActorLocation(),
+		OpenSoundVolume
+	);
 }

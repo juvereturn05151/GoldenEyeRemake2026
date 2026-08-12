@@ -13,6 +13,7 @@ E-mail: juvereturn@gmail.com
 class USceneComponent;
 class USkeletalMeshComponent;
 class UAnimMontage;
+class UParticleSystem;
 class USoundBase;
 class APawn;
 
@@ -150,6 +151,12 @@ private:
 	TObjectPtr<UParticleSystem> ImpactEffect;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Effects", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UParticleSystem> CharacterImpactEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Effects", meta = (AllowPrivateAccess = "true"))
+	bool bUseCharacterImpactEffectForPawnHits = true;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Effects", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<USoundBase> ShootSound;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Bond|Weapon|Effects", meta = (AllowPrivateAccess = "true"))
@@ -163,6 +170,7 @@ private:
 
 	void FireOnce();
 	void PlayFirstPersonMontage(UAnimMontage* MontageToPlay) const;
+	UParticleSystem* GetImpactEffectForHit(const FHitResult& Hit) const;
 	FVector GetTraceStart() const;
 	FVector GetTraceDirection() const;
 	void BroadcastAmmoChanged();

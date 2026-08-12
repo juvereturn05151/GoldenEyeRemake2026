@@ -12,6 +12,7 @@ E-mail: juvereturn@gmail.com
 #include "SWATEnemyCharacter.generated.h"
 
 class UNPCHealthComponent;
+class UParticleSystem;
 class USWATCombatComponent;
 class USWATWeaponComponent;
 class USoundBase;
@@ -121,6 +122,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SWAT|Sound")
 	TObjectPtr<USoundBase> IHeardSomethingSound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SWAT|Effects")
+	TObjectPtr<UParticleSystem> BloodParticleTemplate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SWAT|Effects")
+	FVector BloodParticleScale = FVector(1.0f, 1.0f, 1.0f);
+
 	UPROPERTY(VisibleInstanceOnly, BlueprintReadOnly, Category = "SWAT|State")
 	bool bIsDead = false;
 
@@ -165,6 +172,7 @@ private:
 	void RestoreMovementAfterHitReaction();
 	void BroadcastStateChanged();
 	void PlaySoundAtSWATLocation(USoundBase* Sound) const;
+	void SpawnBloodParticleAtHit(const FHitResult& HitResult) const;
 
 	bool bIsHitReactionOnCooldown = false;
 	TEnumAsByte<EMovementMode> PreviousMovementMode = MOVE_Walking;
