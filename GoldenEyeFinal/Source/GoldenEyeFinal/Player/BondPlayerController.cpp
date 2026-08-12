@@ -56,6 +56,11 @@ UUserWidget* ABondPlayerController::GetDeathWidget() const
 	return DeathWidget;
 }
 
+UUserWidget* ABondPlayerController::GetWinWidget() const
+{
+	return WinWidget;
+}
+
 UUserWidget* ABondPlayerController::GetInteractionPromptWidget() const
 {
 	return InteractionPromptWidget;
@@ -108,6 +113,45 @@ void ABondPlayerController::HideInteractionPrompt()
 	{
 		InteractionPromptWidget->SetVisibility(ESlateVisibility::Hidden);
 	}
+}
+
+void ABondPlayerController::ShowWinWidget(bool bPauseGame)
+{
+	if (!IsLocalController())
+	{
+		return;
+	}
+
+	if (!WinWidget && WinWidgetClass)
+	{
+		WinWidget = CreateWidget<UUserWidget>(this, WinWidgetClass);
+	}
+
+	if (!WinWidget)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s cannot show win widget: WinWidgetClass is not assigned."), *GetName());
+		return;
+	}
+
+	if (!WinWidget->IsInViewport())
+	{
+		WinWidget->AddToViewport(100);
+	}
+
+	WinWidget->SetVisibility(ESlateVisibility::Visible);
+
+	if (bPauseGame)
+	{
+		SetPause(true);
+		bShowMouseCursor = true;
+
+		FInputModeUIOnly InputMode;
+		InputMode.SetWidgetToFocus(WinWidget->TakeWidget());
+		InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+		SetInputMode(InputMode);
+	}
+
+	HandleBondWin();
 }
 
 void ABondPlayerController::InitializeMissionObjectiveUI()

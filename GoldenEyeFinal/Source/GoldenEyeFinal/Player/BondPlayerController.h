@@ -32,6 +32,9 @@ public:
 	UUserWidget* GetDeathWidget() const;
 
 	UFUNCTION(BlueprintPure, Category = "Bond|UI")
+	UUserWidget* GetWinWidget() const;
+
+	UFUNCTION(BlueprintPure, Category = "Bond|UI")
 	UUserWidget* GetInteractionPromptWidget() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Bond|UI")
@@ -42,6 +45,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Bond|UI")
 	void HideInteractionPrompt();
+
+	UFUNCTION(BlueprintCallable, Category = "Bond|UI")
+	void ShowWinWidget(bool bPauseGame = true);
 
 	UFUNCTION(BlueprintCallable, Category = "Bond|Mission UI")
 	void InitializeMissionObjectiveUI();
@@ -75,6 +81,9 @@ public:
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Bond|UI")
 	void HandleBondDeath();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Bond|UI")
+	void HandleBondWin();
 
 	UFUNCTION(BlueprintImplementableEvent, Category = "Bond|UI")
 	void UpdateAmmo(int32 MagazineAmmo, int32 ReserveAmmo);
@@ -120,6 +129,14 @@ private:
 		Category = "Bond|UI",
 		meta = (AllowPrivateAccess = "true")
 	)
+	TSubclassOf<UUserWidget> WinWidgetClass;
+
+	UPROPERTY(
+		EditDefaultsOnly,
+		BlueprintReadOnly,
+		Category = "Bond|UI",
+		meta = (AllowPrivateAccess = "true")
+	)
 	TSubclassOf<UUserWidget> InteractionPromptWidgetClass;
 
 	UPROPERTY(
@@ -146,6 +163,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> DeathWidget;
+
+	UPROPERTY()
+	TObjectPtr<UUserWidget> WinWidget;
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> InteractionPromptWidget;
