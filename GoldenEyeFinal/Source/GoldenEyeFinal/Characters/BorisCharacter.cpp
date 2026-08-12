@@ -1,27 +1,74 @@
 #include "BorisCharacter.h"
 
+#include "../AI/BorisAIController.h"
 #include "../Actors/BorisComputerActor.h"
 #include "../Components/NPCHealthComponent.h"
 #include "../Mission/GameplayMissionSubsystem.h"
 #include "../Mission/MissionTypes.h"
 #include "AIController.h"
 #include "Animation/AnimMontage.h"
+#include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "TimerManager.h"
+
+namespace
+{
+	const TCHAR* GetBorisMissionStateLogName(EBorisMissionState State)
+	{
+		switch (State)
+		{
+		case EBorisMissionState::Idle:
+			return TEXT("Idle");
+		case EBorisMissionState::HandsUp:
+			return TEXT("HandsUp");
+		case EBorisMissionState::MovingToPointA:
+			return TEXT("MovingToPointA");
+		case EBorisMissionState::WaitingAtPointA:
+			return TEXT("WaitingAtPointA");
+		case EBorisMissionState::HurtReacting:
+			return TEXT("HurtReacting");
+		case EBorisMissionState::MovingToComputer:
+			return TEXT("MovingToComputer");
+		case EBorisMissionState::ActivatingComputer:
+			return TEXT("ActivatingComputer");
+		case EBorisMissionState::Completed:
+			return TEXT("Completed");
+		case EBorisMissionState::Dead:
+			return TEXT("Dead");
+		default:
+			return TEXT("Unknown");
+		}
+	}
+}
 
 ABorisCharacter::ABorisCharacter()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	bUseControllerRotationYaw = true;
+	AIControllerClass = ABorisAIController::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
 	HealthComponent = CreateDefaultSubobject<UNPCHealthComponent>(TEXT("HealthComponent"));
 
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		Capsule->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		Capsule->SetCollisionObjectType(ECC_Pawn);
+		Capsule->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	}
+
+	if (USkeletalMeshComponent* MeshComponent = GetMesh())
+	{
+		MeshComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		MeshComponent->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
+	}
+
 	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
 	{
-		MovementComponent->bOrientRotationToMovement = false;
-		MovementComponent->bUseControllerDesiredRotation = true;
-		MovementComponent->RotationRate = FRotator(0.0f, 360.0f, 0.0f);
+		MovementComponent->bOrientRotationToMovement = true;
+		MovementComponent->bUseControllerDesiredRotation = false;
+		MovementComponent->RotationRate = FRotator(0.0f, 540.0f, 0.0f);
 	}
 }
 
@@ -52,8 +99,25 @@ float ABorisCharacter::TakeDamage(
 {
 	if (IsDead() || !HealthComponent || DamageAmount <= 0.0f)
 	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("BORIS: Damage ignored Damage=%.2f IsDead=%s HasHealthComponent=%s State=%s"),
+			DamageAmount,
+			IsDead() ? TEXT("true") : TEXT("false"),
+			HealthComponent ? TEXT("true") : TEXT("false"),
+			GetBorisMissionStateLogName(CurrentMissionState)
+		);
 		return 0.0f;
 	}
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("BORIS: Damage received Damage=%.2f State=%s"),
+		DamageAmount,
+		GetBorisMissionStateLogName(CurrentMissionState)
+	);
 
 	HealthComponent->ApplyDamage(DamageAmount);
 	return DamageAmount;
@@ -137,6 +201,38 @@ void ABorisCharacter::NotifyActivateComputerFinished()
 	CompleteBorisMission();
 }
 
+void ABorisCharacter::NotifyMissionMoveCompleted(bool bSucceeded)
+{
+	if (IsDead())
+	{
+		return;
+	}
+
+	if (!bSucceeded)
+	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("BORIS: Move completed unsuccessfully State=%s"),
+			GetBorisMissionStateLogName(CurrentMissionState)
+		);
+		return;
+	}
+
+	StopMoveArrivalCheck();
+
+	if (CurrentMissionState == EBorisMissionState::MovingToPointA)
+	{
+		EnterWaitingAtPointA();
+		return;
+	}
+
+	if (CurrentMissionState == EBorisMissionState::MovingToComputer)
+	{
+		StartComputerActivation();
+	}
+}
+
 EBorisMissionState ABorisCharacter::GetCurrentMissionState() const
 {
 	return CurrentMissionState;
@@ -156,15 +252,35 @@ void ABorisCharacter::HandleDamageTaken(float DamageAmount)
 {
 	if (IsDead() || DamageAmount <= 0.0f)
 	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("BORIS: Damage event ignored before hurt flow Damage=%.2f State=%s IsDead=%s"),
+			DamageAmount,
+			GetBorisMissionStateLogName(CurrentMissionState),
+			IsDead() ? TEXT("true") : TEXT("false")
+		);
 		return;
 	}
 
-	if (CurrentMissionState != EBorisMissionState::WaitingAtPointA)
+	if (!CanDamageTriggerHurtFlow())
 	{
+		UE_LOG(
+			LogTemp,
+			Log,
+			TEXT("BORIS: Damage did not trigger hurt flow because State=%s"),
+			GetBorisMissionStateLogName(CurrentMissionState)
+		);
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("BORIS: Took damage at Point A"));
+	if (HealthComponent && HealthComponent->GetCurrentHealth() <= 0.0f)
+	{
+		UE_LOG(LogTemp, Log, TEXT("BORIS: Damage did not trigger hurt flow because Boris is dying."));
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("BORIS: Took damage and will move to Computer after hurt reaction"));
 	StartHurtReaction();
 }
 
@@ -230,6 +346,7 @@ void ABorisCharacter::MoveToPointA()
 	}
 
 	SetMissionState(EBorisMissionState::MovingToPointA);
+	SetMovementRotationMode(true);
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Moving to Point A"));
 	AIController->MoveToActor(PointA, MoveAcceptanceRadius, true, true, true);
 	StartMoveArrivalCheck();
@@ -256,7 +373,20 @@ void ABorisCharacter::StartHurtReaction()
 
 	if (HurtMontage)
 	{
-		PlayAnimMontage(HurtMontage);
+		const float PlayLength = PlayAnimMontage(HurtMontage);
+
+		if (PlayLength <= 0.0f)
+		{
+			UE_LOG(
+				LogTemp,
+				Warning,
+				TEXT("BORIS: Hurt montage was assigned but did not play. Check ABP_Boris Slot setup and montage skeleton.")
+			);
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("BORIS: HurtMontage is not assigned on this Boris instance."));
 	}
 }
 
@@ -277,6 +407,7 @@ void ABorisCharacter::MoveToComputer()
 	}
 
 	SetMissionState(EBorisMissionState::MovingToComputer);
+	SetMovementRotationMode(true);
 	UE_LOG(LogTemp, Log, TEXT("BORIS: Moving to Computer"));
 	AIController->MoveToActor(ComputerTarget, MoveAcceptanceRadius, true, true, true);
 	StartMoveArrivalCheck();
@@ -318,6 +449,7 @@ void ABorisCharacter::CompleteBorisMission()
 void ABorisCharacter::StopMissionMovement()
 {
 	StopMoveArrivalCheck();
+	SetMovementRotationMode(false);
 
 	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
 	{
@@ -351,6 +483,17 @@ void ABorisCharacter::FaceActor(AActor* TargetActor)
 void ABorisCharacter::SetMissionState(EBorisMissionState NewState)
 {
 	CurrentMissionState = NewState;
+}
+
+void ABorisCharacter::SetMovementRotationMode(bool bOrientToMovement)
+{
+	bUseControllerRotationYaw = !bOrientToMovement;
+
+	if (UCharacterMovementComponent* MovementComponent = GetCharacterMovement())
+	{
+		MovementComponent->bOrientRotationToMovement = bOrientToMovement;
+		MovementComponent->bUseControllerDesiredRotation = false;
+	}
 }
 
 void ABorisCharacter::BroadcastBorisMissionCompletedEvent()
@@ -387,6 +530,24 @@ void ABorisCharacter::BroadcastBorisMissionCompletedEvent()
 bool ABorisCharacter::CanStartMissionProgression() const
 {
 	return CurrentMissionState == EBorisMissionState::Idle && !bMissionCompleted && !IsDead();
+}
+
+bool ABorisCharacter::CanDamageTriggerHurtFlow() const
+{
+	if (bMissionCompleted || IsDead())
+	{
+		return false;
+	}
+
+	switch (CurrentMissionState)
+	{
+	case EBorisMissionState::HandsUp:
+	case EBorisMissionState::MovingToPointA:
+	case EBorisMissionState::WaitingAtPointA:
+		return true;
+	default:
+		return false;
+	}
 }
 
 bool ABorisCharacter::IsDead() const

@@ -51,6 +51,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Boris|Mission")
 	void NotifyActivateComputerFinished();
 
+	void NotifyMissionMoveCompleted(bool bSucceeded);
+
 	UFUNCTION(BlueprintPure, Category = "Boris|Mission")
 	EBorisMissionState GetCurrentMissionState() const;
 
@@ -144,7 +146,9 @@ private:
 	void StopMissionMovement();
 	void FaceActor(AActor* TargetActor);
 	void SetMissionState(EBorisMissionState NewState);
+	void SetMovementRotationMode(bool bOrientToMovement);
 	void BroadcastBorisMissionCompletedEvent();
+	bool CanDamageTriggerHurtFlow() const;
 	bool CanStartMissionProgression() const;
 	bool IsDead() const;
 

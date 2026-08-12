@@ -1,5 +1,6 @@
 #include "AutomaticDoorActor.h"
 
+#include "../Characters/BorisCharacter.h"
 #include "../Characters/JamesBondCharacter.h"
 #include "../Characters/SWATEnemyCharacter.h"
 #include "Components/BoxComponent.h"
@@ -208,5 +209,12 @@ bool AAutomaticDoorActor::CanUseDoor(AActor* Actor) const
 
 	const ASWATEnemyCharacter* SWATCharacter = Cast<ASWATEnemyCharacter>(Actor);
 
-	return SWATCharacter && !SWATCharacter->IsDead();
+	if (SWATCharacter)
+	{
+		return !SWATCharacter->IsDead();
+	}
+
+	const ABorisCharacter* BorisCharacter = Cast<ABorisCharacter>(Actor);
+
+	return BorisCharacter && BorisCharacter->GetCurrentMissionState() != EBorisMissionState::Dead;
 }
