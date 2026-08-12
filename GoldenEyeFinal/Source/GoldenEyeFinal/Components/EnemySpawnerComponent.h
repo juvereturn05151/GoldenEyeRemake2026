@@ -25,6 +25,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Enemy Spawner")
 	void ResetSpawner();
 
+	UFUNCTION(BlueprintCallable, Category = "Enemy Spawner")
+	bool TriggerSpawner(AActor* BondActor);
+
 	UFUNCTION(BlueprintPure, Category = "Enemy Spawner")
 	int32 GetActivationCount() const;
 

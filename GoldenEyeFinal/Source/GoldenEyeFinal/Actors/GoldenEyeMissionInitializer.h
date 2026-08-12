@@ -4,6 +4,10 @@
 #include "GameFramework/Actor.h"
 #include "GoldenEyeMissionInitializer.generated.h"
 
+class AAutomaticDoorActor;
+class UEnemySpawnerComponent;
+class USceneComponent;
+
 USTRUCT(BlueprintType)
 struct FGoldenEyeEventObjectiveDefinition
 {
@@ -57,6 +61,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Mission")
 	void InitializeMissionAndUI();
 
+	UFUNCTION(BlueprintCallable, Category = "Mission")
+	bool AreAllObjectivesCompleted() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Mission")
+	void CheckAllObjectivesCompleted();
+
+	UFUNCTION(BlueprintCallable, Category = "Mission")
+	void HandleAllObjectivesCompleted();
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mission")
 	bool bInitializeOnBeginPlay = false;
 
@@ -68,4 +81,30 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mission|Components")
+	TObjectPtr<USceneComponent> SceneRoot;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Mission|Final Wave")
+	TObjectPtr<UEnemySpawnerComponent> FinalWaveSpawner;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mission|Completion")
+	TArray<TObjectPtr<AAutomaticDoorActor>> DoorsToUnlockOnAllObjectivesCompleted;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mission|Completion")
+	bool bUnlockDoorsOnAllObjectivesCompleted = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mission|Completion")
+	bool bSpawnFinalWaveOnAllObjectivesCompleted = true;
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Mission|Completion")
+	void OnAllObjectivesCompleted();
+
+private:
+	UFUNCTION()
+	void HandleObjectiveCompleted(FName ObjectiveId);
+
+	void BindMissionCompletionDelegate();
+
+	bool bAllObjectivesCompletedHandled = false;
 };

@@ -68,6 +68,53 @@ void UEnemySpawnerComponent::ResetSpawner()
 	CurrentBondActor = nullptr;
 }
 
+bool UEnemySpawnerComponent::TriggerSpawner(AActor* BondActor)
+{
+	AActor* EffectiveBondActor = BondActor;
+
+	if (!EffectiveBondActor)
+	{
+		if (const UWorld* World = GetWorld())
+		{
+			EffectiveBondActor = UGameplayStatics::GetPlayerPawn(World, 0);
+		}
+	}
+
+	if (!EffectiveBondActor || !CanActivate())
+	{
+		UE_LOG(
+			LogTemp,
+			Warning,
+			TEXT("[Enemy Spawner] Manual trigger failed Owner=%s Bond=%s CanActivate=%s"),
+			*GetNameSafe(GetOwner()),
+			*GetNameSafe(EffectiveBondActor),
+			CanActivate() ? TEXT("true") : TEXT("false")
+		);
+		return false;
+	}
+
+	for (int32 SpawnIndex = 0; SpawnIndex < SpawnCountPerActivation; ++SpawnIndex)
+	{
+		SpawnSWAT(EffectiveBondActor);
+	}
+
+	++ActivationCount;
+	TriggerAlertCameras(EffectiveBondActor);
+	OnSpawnerActivated.Broadcast(EffectiveBondActor);
+
+	UE_LOG(
+		LogTemp,
+		Log,
+		TEXT("[Enemy Spawner] Manually triggered final wave Owner=%s SpawnCount=%d Activation=%d/%d"),
+		*GetNameSafe(GetOwner()),
+		SpawnCountPerActivation,
+		ActivationCount,
+		MaxActivationCount
+	);
+
+	return true;
+}
+
 int32 UEnemySpawnerComponent::GetActivationCount() const
 {
 	return ActivationCount;

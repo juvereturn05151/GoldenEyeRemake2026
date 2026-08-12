@@ -1,13 +1,23 @@
 #include "GoldenEyeMissionInitializer.h"
 
+#include "AutomaticDoorActor.h"
+#include "../Components/EnemySpawnerComponent.h"
 #include "../Mission/GameplayMissionSubsystem.h"
+#include "../Mission/MissionObjective.h"
 #include "../Player/BondPlayerController.h"
+#include "Components/SceneComponent.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 
 AGoldenEyeMissionInitializer::AGoldenEyeMissionInitializer()
 {
 	PrimaryActorTick.bCanEverTick = false;
+
+	SceneRoot = CreateDefaultSubobject<USceneComponent>(TEXT("SceneRoot"));
+	SetRootComponent(SceneRoot);
+
+	FinalWaveSpawner = CreateDefaultSubobject<UEnemySpawnerComponent>(TEXT("FinalWaveSpawner"));
+	FinalWaveSpawner->SetupAttachment(SceneRoot);
 
 	FGoldenEyeSurveillanceObjectiveDefinition SurveillanceObjective;
 	SurveillanceObjective.ObjectiveId = TEXT("DestroySurveillanceCameras");
@@ -101,6 +111,8 @@ void AGoldenEyeMissionInitializer::InitializeMissionAndUI()
 		return;
 	}
 
+	BindMissionCompletionDelegate();
+
 	for (const FGoldenEyeSurveillanceObjectiveDefinition& ObjectiveDefinition : SurveillanceObjectives)
 	{
 		if (ObjectiveDefinition.ObjectiveId == NAME_None || ObjectiveDefinition.TargetGroupId == NAME_None)
@@ -157,4 +169,110 @@ void AGoldenEyeMissionInitializer::InitializeMissionAndUI()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("[Mission UI] InitializeMissionAndUI could not find BP_BondPlayerController."));
 	}
+
+	CheckAllObjectivesCompleted();
+}
+
+bool AGoldenEyeMissionInitializer::AreAllObjectivesCompleted() const
+{
+	const UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		return false;
+	}
+
+	const UGameplayMissionSubsystem* MissionSubsystem = World->GetSubsystem<UGameplayMissionSubsystem>();
+
+	if (!MissionSubsystem)
+	{
+		return false;
+	}
+
+	const TArray<UMissionObjective*>& ActiveObjectives = MissionSubsystem->GetActiveObjectives();
+
+	if (ActiveObjectives.Num() == 0)
+	{
+		return false;
+	}
+
+	for (const UMissionObjective* Objective : ActiveObjectives)
+	{
+		if (!Objective || Objective->GetStatus() != EObjectiveStatus::Completed)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void AGoldenEyeMissionInitializer::CheckAllObjectivesCompleted()
+{
+	if (bAllObjectivesCompletedHandled || !AreAllObjectivesCompleted())
+	{
+		return;
+	}
+
+	HandleAllObjectivesCompleted();
+}
+
+void AGoldenEyeMissionInitializer::HandleAllObjectivesCompleted()
+{
+	if (bAllObjectivesCompletedHandled)
+	{
+		return;
+	}
+
+	bAllObjectivesCompletedHandled = true;
+
+	UE_LOG(LogTemp, Log, TEXT("[Mission] All objectives completed. Running completion actions."));
+
+	if (bUnlockDoorsOnAllObjectivesCompleted)
+	{
+		for (AAutomaticDoorActor* Door : DoorsToUnlockOnAllObjectivesCompleted)
+		{
+			if (!Door)
+			{
+				continue;
+			}
+
+			Door->UnlockDoor();
+			UE_LOG(LogTemp, Log, TEXT("[Mission] Unlocked completion door=%s"), *GetNameSafe(Door));
+		}
+	}
+
+	if (bSpawnFinalWaveOnAllObjectivesCompleted && FinalWaveSpawner)
+	{
+		AActor* BondActor = UGameplayStatics::GetPlayerPawn(this, 0);
+		FinalWaveSpawner->TriggerSpawner(BondActor);
+	}
+
+	OnAllObjectivesCompleted();
+}
+
+void AGoldenEyeMissionInitializer::HandleObjectiveCompleted(FName ObjectiveId)
+{
+	UE_LOG(LogTemp, Log, TEXT("[Mission] Initializer saw objective completed=%s"), *ObjectiveId.ToString());
+	CheckAllObjectivesCompleted();
+}
+
+void AGoldenEyeMissionInitializer::BindMissionCompletionDelegate()
+{
+	UWorld* World = GetWorld();
+
+	if (!World)
+	{
+		return;
+	}
+
+	UGameplayMissionSubsystem* MissionSubsystem = World->GetSubsystem<UGameplayMissionSubsystem>();
+
+	if (!MissionSubsystem)
+	{
+		return;
+	}
+
+	MissionSubsystem->OnObjectiveCompleted.RemoveDynamic(this, &AGoldenEyeMissionInitializer::HandleObjectiveCompleted);
+	MissionSubsystem->OnObjectiveCompleted.AddDynamic(this, &AGoldenEyeMissionInitializer::HandleObjectiveCompleted);
 }
